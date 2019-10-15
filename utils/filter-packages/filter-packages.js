@@ -24,8 +24,7 @@ module.exports = filterPackages;
  * @throws when a given glob would produce an empty list of packages and
  *     `continueIfNoMatch` is not set.
  */
-function filterPackages(packagesToFilter, include = [], exclude = [],
-                        showPrivate, continueIfNoMatch) {
+function filterPackages(packagesToFilter, include = [], exclude = [], showPrivate, continueIfNoMatch) {
   const filtered = new Set(packagesToFilter);
   const patterns = [].concat(arrify(include), negate(exclude));
 
@@ -56,9 +55,7 @@ function filterPackages(packagesToFilter, include = [], exclude = [],
     }
 
     if (!filtered.size && !continueIfNoMatch) {
-      throw new ValidationError(
-          "EFILTER",
-          util.format("No packages remain after filtering", patterns));
+      throw new ValidationError("EFILTER", util.format("No packages remain after filtering", patterns));
     }
   }
 
@@ -71,7 +68,7 @@ function arrify(thing) {
   }
 
   if (!Array.isArray(thing)) {
-    return [ thing ];
+    return [thing];
   }
 
   return thing;

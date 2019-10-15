@@ -14,27 +14,27 @@ const lernaLink = require("@lerna-test/command-runner")(require("../command"));
 
 // assertion helpers
 const symlinkedDirectories = testDir =>
-    createSymlink.mock.calls
-        .slice()
-        // ensure sort is always consistent, despite promise variability
-        .sort((a, b) => {
-          // two-dimensional path sort
-          if (b[0] === a[0]) {
-            if (b[1] === a[1]) {
-              // ignore third field
-              return 0;
-            }
+  createSymlink.mock.calls
+    .slice()
+    // ensure sort is always consistent, despite promise variability
+    .sort((a, b) => {
+      // two-dimensional path sort
+      if (b[0] === a[0]) {
+        if (b[1] === a[1]) {
+          // ignore third field
+          return 0;
+        }
 
-            return b[1] < a[1] ? 1 : -1;
-          }
+        return b[1] < a[1] ? 1 : -1;
+      }
 
-          return b[0] < a[0] ? 1 : -1;
-        })
-        .map(([ src, dest, type ]) => ({
-               _src : normalizeRelativeDir(testDir, src),
-               dest : normalizeRelativeDir(testDir, dest),
-               type,
-             }));
+      return b[0] < a[0] ? 1 : -1;
+    })
+    .map(([src, dest, type]) => ({
+      _src: normalizeRelativeDir(testDir, src),
+      dest: normalizeRelativeDir(testDir, dest),
+      type,
+    }));
 
 describe("LinkCommand", () => {
   // the underlying implementation of symlinkDependencies
@@ -88,12 +88,11 @@ Array [
   });
 
   describe("with publishConfig.directory", () => {
-    it("should symlink sub-directory of package folders and bin directories",
-       async () => {
-         const testDir = await initFixture("with-contents");
-         await lernaLink(testDir)();
+    it("should symlink sub-directory of package folders and bin directories", async () => {
+      const testDir = await initFixture("with-contents");
+      await lernaLink(testDir)();
 
-         expect(symlinkedDirectories(testDir)).toMatchInlineSnapshot(`
+      expect(symlinkedDirectories(testDir)).toMatchInlineSnapshot(`
 Array [
   Object {
     "_src": "packages/package-1/dist",
@@ -132,7 +131,7 @@ Array [
   },
 ]
 `);
-       });
+    });
   });
 
   describe("with --force-local", () => {
@@ -188,12 +187,11 @@ Array [
   });
 
   describe("with --contents", () => {
-    it("should symlink sub-directory of package folders and bin directories",
-       async () => {
-         const testDir = await initFixture("with-contents");
-         await lernaLink(testDir)("--contents", "build");
+    it("should symlink sub-directory of package folders and bin directories", async () => {
+      const testDir = await initFixture("with-contents");
+      await lernaLink(testDir)("--contents", "build");
 
-         expect(symlinkedDirectories(testDir)).toMatchInlineSnapshot(`
+      expect(symlinkedDirectories(testDir)).toMatchInlineSnapshot(`
 Array [
   Object {
     "_src": "packages/package-1/build",
@@ -232,6 +230,6 @@ Array [
   },
 ]
 `);
-       });
+    });
   });
 });

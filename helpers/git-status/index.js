@@ -5,6 +5,5 @@ const cp = require("child_process");
 module.exports = gitStatus;
 
 function gitStatus(cwd) {
-  return cp.spawnSync("git", [ "status", "--porcelain" ],
-                      {cwd, encoding : "utf8"});
+  return cp.spawnSync("git", ["status", "--porcelain"], { cwd, encoding: "utf8" });
 }

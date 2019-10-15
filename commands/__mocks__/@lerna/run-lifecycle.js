@@ -11,8 +11,7 @@ const mockCreateRunner = jest.fn(opts => (pkg, stage) => {
 });
 
 function getOrderedCalls() {
-  return mockRunLifecycle.mock.calls.map(
-      ([ pkg, script ]) => [pkg.name, script]);
+  return mockRunLifecycle.mock.calls.map(([pkg, script]) => [pkg.name, script]);
 }
 
 module.exports = mockRunLifecycle;

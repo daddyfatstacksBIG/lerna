@@ -18,12 +18,12 @@ class CyclicPackageGraphNode extends Map {
 
     Object.defineProperties(this, {
       // immutable properties
-      name : {
-        enumerable : true,
-        value : `(cycle) ${(lastCollapsedNodeId += 1)}`,
+      name: {
+        enumerable: true,
+        value: `(cycle) ${(lastCollapsedNodeId += 1)}`,
       },
-      isCycle : {
-        value : true,
+      isCycle: {
+        value: true,
       },
     });
   }
@@ -33,9 +33,9 @@ class CyclicPackageGraphNode extends Map {
    *     C -> A`.
    */
   toString() {
-    const parts = Array.from(
-        this, ([ key, node ]) =>
-                  node.isCycle ? `(nested cycle: ${node.toString()})` : key);
+    const parts = Array.from(this, ([key, node]) =>
+      node.isCycle ? `(nested cycle: ${node.toString()})` : key
+    );
 
     // start from the origin
     parts.push(parts[0]);

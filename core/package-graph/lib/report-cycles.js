@@ -10,9 +10,7 @@ function reportCycles(paths, rejectCycles) {
     return;
   }
 
-  const cycleMessage = [
-    "Dependency cycles detected, you should fix these!"
-  ].concat(paths).join("\n");
+  const cycleMessage = ["Dependency cycles detected, you should fix these!"].concat(paths).join("\n");
 
   if (rejectCycles) {
     throw new ValidationError("ECYCLE", cycleMessage);

@@ -5,44 +5,32 @@ const log = require("npmlog");
 const path = require("path");
 
 module.exports = compose(
-    // add new predicates HERE
-    remap("command.add.includeFilteredDependencies",
-          "command.add.includeDependencies", {alsoRoot : true}),
-    remap("command.add.includeFilteredDependents",
-          "command.add.includeDependents", {alsoRoot : true}),
-    remap("command.bootstrap.includeFilteredDependencies",
-          "command.bootstrap.includeDependencies"),
-    remap("command.bootstrap.includeFilteredDependents",
-          "command.bootstrap.includeDependents"),
-    remap("command.clean.includeFilteredDependencies",
-          "command.clean.includeDependencies"),
-    remap("command.clean.includeFilteredDependents",
-          "command.clean.includeDependents"),
-    remap("command.exec.includeFilteredDependencies",
-          "command.exec.includeDependencies"),
-    remap("command.exec.includeFilteredDependents",
-          "command.exec.includeDependents"),
-    remap("command.list.includeFilteredDependencies",
-          "command.list.includeDependencies"),
-    remap("command.list.includeFilteredDependents",
-          "command.list.includeDependents"),
-    remap("command.run.includeFilteredDependencies",
-          "command.run.includeDependencies"),
-    remap("command.run.includeFilteredDependents",
-          "command.run.includeDependents"),
-    remap("command.version.githubRelease", "command.version.createRelease", {
-      toValue : value => value && "github",
-    }),
-    remap("command.publish.githubRelease", "command.version.createRelease", {
-      alsoRoot : true,
-      toValue : value => value && "github",
-    }),
-    remap("command.publish.npmTag", "command.publish.distTag",
-          {alsoRoot : true}),
-    remap("command.publish.cdVersion", "command.publish.bump",
-          {alsoRoot : true}),
-    remap("command.publish.ignore", "command.publish.ignoreChanges"),
-    remap("commands", "command"), (config, filepath) => ({config, filepath}));
+  // add new predicates HERE
+  remap("command.add.includeFilteredDependencies", "command.add.includeDependencies", { alsoRoot: true }),
+  remap("command.add.includeFilteredDependents", "command.add.includeDependents", { alsoRoot: true }),
+  remap("command.bootstrap.includeFilteredDependencies", "command.bootstrap.includeDependencies"),
+  remap("command.bootstrap.includeFilteredDependents", "command.bootstrap.includeDependents"),
+  remap("command.clean.includeFilteredDependencies", "command.clean.includeDependencies"),
+  remap("command.clean.includeFilteredDependents", "command.clean.includeDependents"),
+  remap("command.exec.includeFilteredDependencies", "command.exec.includeDependencies"),
+  remap("command.exec.includeFilteredDependents", "command.exec.includeDependents"),
+  remap("command.list.includeFilteredDependencies", "command.list.includeDependencies"),
+  remap("command.list.includeFilteredDependents", "command.list.includeDependents"),
+  remap("command.run.includeFilteredDependencies", "command.run.includeDependencies"),
+  remap("command.run.includeFilteredDependents", "command.run.includeDependents"),
+  remap("command.version.githubRelease", "command.version.createRelease", {
+    toValue: value => value && "github",
+  }),
+  remap("command.publish.githubRelease", "command.version.createRelease", {
+    alsoRoot: true,
+    toValue: value => value && "github",
+  }),
+  remap("command.publish.npmTag", "command.publish.distTag", { alsoRoot: true }),
+  remap("command.publish.cdVersion", "command.publish.bump", { alsoRoot: true }),
+  remap("command.publish.ignore", "command.publish.ignoreChanges"),
+  remap("commands", "command"),
+  (config, filepath) => ({ config, filepath })
+);
 
 /**
  * Remap deprecated config properties, if they exist.
@@ -56,8 +44,8 @@ module.exports = compose(
  *     value
  * @return {Function} predicate accepting (config, filepath)
  */
-function remap(search, target, {alsoRoot, toValue} = {}) {
-  const pathsToSearch = [ search ];
+function remap(search, target, { alsoRoot, toValue } = {}) {
+  const pathsToSearch = [search];
 
   if (alsoRoot) {
     // root config is overwritten by "more specific" nested config
@@ -70,8 +58,7 @@ function remap(search, target, {alsoRoot, toValue} = {}) {
         const fromVal = dotProp.get(obj.config, searchPath);
         const toVal = toValue ? toValue(fromVal) : fromVal;
 
-        log.warn("project",
-                 deprecationMessage(obj, target, searchPath, fromVal, toVal));
+        log.warn("project", deprecationMessage(obj, target, searchPath, fromVal, toVal));
 
         dotProp.set(obj.config, target, toVal);
         dotProp.delete(obj.config, searchPath);
@@ -102,15 +89,16 @@ function deprecationMessage(obj, target, searchPath, fromVal, toVal) {
     from = `"${searchPath}"`;
     to = `"${target}"`;
   } else {
-    from = stringify({[searchPath] : fromVal});
-    to = stringify({[target] : toVal});
+    from = stringify({ [searchPath]: fromVal });
+    to = stringify({ [target]: toVal });
   }
 
-  return `Deprecated key "${searchPath}" found in ${localPath}\nPlease update ${
-      from} => ${to}`;
+  return `Deprecated key "${searchPath}" found in ${localPath}\nPlease update ${from} => ${to}`;
 }
 
-function stringify(obj) { return JSON.stringify(obj).slice(1, -1); }
+function stringify(obj) {
+  return JSON.stringify(obj).slice(1, -1);
+}
 
 function compose(...funcs) {
   return funcs.reduce((a, b) => (...args) => a(b(...args)));

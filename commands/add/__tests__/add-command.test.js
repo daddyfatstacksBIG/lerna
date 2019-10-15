@@ -9,7 +9,7 @@ const getManifest = require("@evocateur/pacote/manifest");
 
 // helpers
 const initFixture = require("@lerna-test/init-fixture")(__dirname);
-const {getPackages} = require("@lerna/project");
+const { getPackages } = require("@lerna/project");
 
 // file under test
 const lernaAdd = require("@lerna-test/command-runner")(require("../command"));
@@ -21,7 +21,7 @@ describe("AddCommand", () => {
   // we already have enough tests of BootstrapCommand
   bootstrap.mockResolvedValue();
   // we don't need network requests during unit tests
-  getManifest.mockResolvedValue({version : "1.0.0"});
+  getManifest.mockResolvedValue({ version: "1.0.0" });
 
   it("should throw without packages", async () => {
     expect.assertions(1);
@@ -47,18 +47,17 @@ describe("AddCommand", () => {
     }
   });
 
-  it("should throw for adding local package without specified version",
-     async () => {
-       expect.assertions(1);
+  it("should throw for adding local package without specified version", async () => {
+    expect.assertions(1);
 
-       const testDir = await initFixture("unspecified-version");
+    const testDir = await initFixture("unspecified-version");
 
-       try {
-         await lernaAdd(testDir)("@test/package-1");
-       } catch (err) {
-         expect(err.message).toMatch(/Requested package has no version:/);
-       }
-     });
+    try {
+      await lernaAdd(testDir)("@test/package-1");
+    } catch (err) {
+      expect(err.message).toMatch(/Requested package has no version:/);
+    }
+  });
 
   it("should reference remote dependencies", async () => {
     const testDir = await initFixture("basic");
@@ -71,18 +70,19 @@ describe("AddCommand", () => {
     expect(pkg3).toDependOn("tiny-tarball");
     expect(pkg4).toDependOn("tiny-tarball");
 
-    expect(getManifest)
-        .toHaveBeenLastCalledWith(expect.objectContaining({
-          // an npm-package-arg Result
-          name : "tiny-tarball",
-          fetchSpec : "latest",
-          registry : true,
-          type : "tag",
-        }),
-                                  expect.objectContaining({
-                                    // an npm-conf snapshot
-                                    registry : "https://registry.npmjs.org/",
-                                  }));
+    expect(getManifest).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        // an npm-package-arg Result
+        name: "tiny-tarball",
+        fetchSpec: "latest",
+        registry: true,
+        type: "tag",
+      }),
+      expect.objectContaining({
+        // an npm-conf snapshot
+        registry: "https://registry.npmjs.org/",
+      })
+    );
   });
 
   it("should reference local dependencies", async () => {
@@ -123,7 +123,7 @@ describe("AddCommand", () => {
     const [, pkg2] = await getPackages(testDir);
 
     expect(pkg2).toDependOn("@test/package-1", "1.0.0", {
-      exact : true,
+      exact: true,
     });
   });
 
@@ -136,21 +136,18 @@ describe("AddCommand", () => {
     expect(pkg2).toDependOn("@test/package-1", "file:../package-1");
   });
 
-  it("adds local dep as file: specifier when existing relationships are file: specifiers",
-     async () => {
-       const testDir = await initFixture("existing");
-       const [, , pkg3] = await getPackages(testDir);
+  it("adds local dep as file: specifier when existing relationships are file: specifiers", async () => {
+    const testDir = await initFixture("existing");
+    const [, , pkg3] = await getPackages(testDir);
 
-       pkg3.updateLocalDependency(
-           {name : "@test/package-2", type : "directory"}, "file:../package-2",
-           "");
-       await pkg3.serialize();
+    pkg3.updateLocalDependency({ name: "@test/package-2", type: "directory" }, "file:../package-2", "");
+    await pkg3.serialize();
 
-       await lernaAdd(testDir)("@test/package-1");
-       const [, pkg2] = await getPackages(testDir);
+    await lernaAdd(testDir)("@test/package-1");
+    const [, pkg2] = await getPackages(testDir);
 
-       expect(pkg2).toDependOn("@test/package-1", "file:../package-1");
-     });
+    expect(pkg2).toDependOn("@test/package-1", "file:../package-1");
+  });
 
   it("should add target package to devDependencies", async () => {
     const testDir = await initFixture("basic");
@@ -225,7 +222,7 @@ describe("AddCommand", () => {
     await lernaAdd(testDir)("tiny-tarball@1.0.0");
     const [pkg1] = await getPackages(testDir);
 
-    expect(pkg1).toDependOn("tiny-tarball", "1.0.0", {exact : true});
+    expect(pkg1).toDependOn("tiny-tarball", "1.0.0", { exact: true });
   });
 
   it("accepts --registry option", async () => {
@@ -237,19 +234,22 @@ describe("AddCommand", () => {
     });
 
     try {
-      await lernaAdd(testDir)("@my-own/private-idaho", "--registry",
-                              "http://registry.cuckoo-banana-pants.com/");
+      await lernaAdd(testDir)(
+        "@my-own/private-idaho",
+        "--registry",
+        "http://registry.cuckoo-banana-pants.com/"
+      );
     } catch (err) {
       // obviously this registry doesn't exist, thus it will always error
       expect(err.message).toMatch("ENOTFOUND");
-      expect(getManifest)
-          .toHaveBeenLastCalledWith(
-              expect.objectContaining({
-                name : "@my-own/private-idaho",
-              }),
-              expect.objectContaining({
-                registry : "http://registry.cuckoo-banana-pants.com/",
-              }));
+      expect(getManifest).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          name: "@my-own/private-idaho",
+        }),
+        expect.objectContaining({
+          registry: "http://registry.cuckoo-banana-pants.com/",
+        })
+      );
     }
 
     expect.hasAssertions();
@@ -260,32 +260,41 @@ describe("AddCommand", () => {
 
     await lernaAdd(testDir)("@test/package-1");
 
-    expect(bootstrap).toHaveBeenLastCalledWith(expect.objectContaining({
-      args : [],
-      cwd : testDir,
-      composed : "add",
-    }));
+    expect(bootstrap).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        args: [],
+        cwd: testDir,
+        composed: "add",
+      })
+    );
   });
 
   it("should not pass filter options to bootstrap", async () => {
     const testDir = await initFixture("existing");
 
-    await lernaAdd(testDir)("@test/package-2", "--scope=@test/package-1",
-                            "--ignore=@test/package-3", "--no-private",
-                            "--since=deadbeef", "--include-filtered-dependents",
-                            "--include-filtered-dependencies");
+    await lernaAdd(testDir)(
+      "@test/package-2",
+      "--scope=@test/package-1",
+      "--ignore=@test/package-3",
+      "--no-private",
+      "--since=deadbeef",
+      "--include-filtered-dependents",
+      "--include-filtered-dependencies"
+    );
     const [pkg1] = await getPackages(testDir);
 
     expect(pkg1).toDependOn("@test/package-2");
-    expect(bootstrap).toHaveBeenLastCalledWith(expect.objectContaining({
-      scope : undefined,
-      ignore : undefined,
-      private : undefined,
-      since : undefined,
-      excludeDependents : undefined,
-      includeDependents : undefined,
-      includeDependencies : undefined,
-    }));
+    expect(bootstrap).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        scope: undefined,
+        ignore: undefined,
+        private: undefined,
+        since: undefined,
+        excludeDependents: undefined,
+        includeDependents: undefined,
+        includeDependencies: undefined,
+      })
+    );
   });
 
   it("should not bootstrap unchanged packages", async () => {
@@ -314,7 +323,7 @@ describe("AddCommand", () => {
     const [, pkg2] = await getPackages(testDir);
 
     expect(pkg2).toDependOn("@test/package-1", "1.0.0", {
-      exact : true,
+      exact: true,
     });
   });
 });

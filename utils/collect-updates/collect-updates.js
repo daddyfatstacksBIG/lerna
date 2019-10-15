@@ -12,38 +12,29 @@ module.exports = collectUpdates;
 module.exports.collectPackages = collectPackages;
 module.exports.getPackagesForOption = getPackagesForOption;
 
-function collectUpdates(filteredPackages, packageGraph, execOpts,
-                        commandOptions) {
-  const {
-    forcePublish,
-    conventionalCommits,
-    conventionalGraduate,
-    excludeDependents
-  } = commandOptions;
+function collectUpdates(filteredPackages, packageGraph, execOpts, commandOptions) {
+  const { forcePublish, conventionalCommits, conventionalGraduate, excludeDependents } = commandOptions;
 
   // If --conventional-commits and --conventional-graduate are both set, ignore
   // --force-publish
   const useConventionalGraduate = conventionalCommits && conventionalGraduate;
-  const forced = getPackagesForOption(
-      useConventionalGraduate ? conventionalGraduate : forcePublish);
+  const forced = getPackagesForOption(useConventionalGraduate ? conventionalGraduate : forcePublish);
 
-  const packages = filteredPackages.length === packageGraph.size
-                       ? packageGraph
-                       : new Map(filteredPackages.map(
-                             ({name}) => [name, packageGraph.get(name)]));
+  const packages =
+    filteredPackages.length === packageGraph.size
+      ? packageGraph
+      : new Map(filteredPackages.map(({ name }) => [name, packageGraph.get(name)]));
 
   let committish = commandOptions.since;
 
   if (hasTags(execOpts)) {
     // describe the last annotated tag in the current branch
-    const {sha, refCount, lastTagName} =
-        describeRef.sync(execOpts, commandOptions.includeMergedTags);
+    const { sha, refCount, lastTagName } = describeRef.sync(execOpts, commandOptions.includeMergedTags);
     // TODO: warn about dirty tree?
 
     if (refCount === "0" && forced.size === 0 && !committish) {
       // no commits since previous release
-      log.notice(
-          "", "Current HEAD is already released, skipping change detection.");
+      log.notice("", "Current HEAD is already released, skipping change detection.");
 
       return [];
     }
@@ -63,10 +54,10 @@ function collectUpdates(filteredPackages, packageGraph, execOpts,
   if (forced.size) {
     // "warn" might seem a bit loud, but it is appropriate for logging anything
     // _forced_
-    log.warn(useConventionalGraduate ? "conventional-graduate"
-                                     : "force-publish",
-             forced.has("*") ? "all packages"
-                             : Array.from(forced.values()).join("\n"));
+    log.warn(
+      useConventionalGraduate ? "conventional-graduate" : "force-publish",
+      forced.has("*") ? "all packages" : Array.from(forced.values()).join("\n")
+    );
   }
 
   if (useConventionalGraduate) {
@@ -81,28 +72,25 @@ function collectUpdates(filteredPackages, packageGraph, execOpts,
     log.info("", "Assuming all packages changed");
 
     return collectPackages(packages, {
-      onInclude : name => log.verbose("updated", name),
+      onInclude: name => log.verbose("updated", name),
       excludeDependents,
     });
   }
 
   log.info("", `Looking for changed packages since ${committish}`);
 
-  const hasDiff =
-      makeDiffPredicate(committish, execOpts, commandOptions.ignoreChanges);
+  const hasDiff = makeDiffPredicate(committish, execOpts, commandOptions.ignoreChanges);
   const needsBump =
-      !commandOptions.bump || commandOptions.bump.startsWith("pre")
-          ? () => false
-          : /* skip packages that have not been previously prereleased */
-          node => node.prereleaseId;
+    !commandOptions.bump || commandOptions.bump.startsWith("pre")
+      ? () => false
+      : /* skip packages that have not been previously prereleased */
+        node => node.prereleaseId;
   const isForced = (node, name) =>
-      (forced.has("*") || forced.has(name)) &&
-      (useConventionalGraduate ? node.prereleaseId : true);
+    (forced.has("*") || forced.has(name)) && (useConventionalGraduate ? node.prereleaseId : true);
 
   return collectPackages(packages, {
-    isCandidate : (node, name) =>
-        isForced(node, name) || needsBump(node) || hasDiff(node),
-    onInclude : name => log.verbose("updated", name),
+    isCandidate: (node, name) => isForced(node, name) || needsBump(node) || hasDiff(node),
+    onInclude: name => log.verbose("updated", name),
     excludeDependents,
   });
 }

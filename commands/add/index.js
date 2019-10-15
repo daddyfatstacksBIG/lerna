@@ -11,21 +11,24 @@ const Command = require("@lerna/command");
 const npmConf = require("@lerna/npm-conf");
 const bootstrap = require("@lerna/bootstrap");
 const ValidationError = require("@lerna/validation-error");
-const {getFilteredPackages} = require("@lerna/filter-options");
+const { getFilteredPackages } = require("@lerna/filter-options");
 const getRangeToReference = require("./lib/get-range-to-reference");
 
 module.exports = factory;
 
-function factory(argv) { return new AddCommand(argv); }
+function factory(argv) {
+  return new AddCommand(argv);
+}
 
 class AddCommand extends Command {
-  get requiresGit() { return false; }
+  get requiresGit() {
+    return false;
+  }
 
   initialize() {
     this.dependencyType = this.options.dev ? "devDependencies" : "dependencies";
     this.spec = npa(this.options.pkg);
-    this.dirs = new Set(
-        this.options.globs.map(fp => path.resolve(this.project.rootPath, fp)));
+    this.dirs = new Set(this.options.globs.map(fp => path.resolve(this.project.rootPath, fp)));
     this.selfSatisfied = this.packageSatisfied();
 
     // https://docs.npmjs.com/misc/config#save-prefix
@@ -34,10 +37,13 @@ class AddCommand extends Command {
     if (this.packageGraph.has(this.spec.name) && !this.selfSatisfied) {
       const available = this.packageGraph.get(this.spec.name).version;
 
-      throw new ValidationError("ENOTSATISFIED", dedent`
+      throw new ValidationError(
+        "ENOTSATISFIED",
+        dedent`
           Requested range not satisfiable:
           ${this.spec.name}@${this.spec.fetchSpec} (available: ${available})
-        `);
+        `
+      );
     }
 
     let chain = Promise.resolve();
@@ -45,28 +51,31 @@ class AddCommand extends Command {
     chain = chain.then(() => this.getPackageVersion());
     chain = chain.then(version => {
       if (version == null) {
-        throw new ValidationError("ENOTSATISFIED", dedent`
+        throw new ValidationError(
+          "ENOTSATISFIED",
+          dedent`
             Requested package has no version: ${this.spec.name}
-          `);
+          `
+        );
       }
       this.spec.version = version;
     });
 
-    chain = chain.then(() => getFilteredPackages(this.packageGraph,
-                                                 this.execOpts, this.options));
-    chain = chain.then(
-        filteredPackages => { this.filteredPackages = filteredPackages; });
+    chain = chain.then(() => getFilteredPackages(this.packageGraph, this.execOpts, this.options));
+    chain = chain.then(filteredPackages => {
+      this.filteredPackages = filteredPackages;
+    });
 
     chain = chain.then(() => this.collectPackagesToChange());
-    chain = chain.then(
-        packagesToChange => { this.packagesToChange = packagesToChange; });
+    chain = chain.then(packagesToChange => {
+      this.packagesToChange = packagesToChange;
+    });
 
     return chain.then(() => {
       const proceed = this.packagesToChange.length > 0;
 
       if (!proceed) {
-        this.logger.warn(
-            `No packages found where ${this.spec.name} can be added.`);
+        this.logger.warn(`No packages found where ${this.spec.name} can be added.`);
       }
 
       return proceed;
@@ -75,7 +84,8 @@ class AddCommand extends Command {
 
   execute() {
     const numberOfPackages = `${this.packagesToChange.length} package${
-        this.packagesToChange.length > 1 ? "s" : ""}`;
+      this.packagesToChange.length > 1 ? "s" : ""
+    }`;
 
     this.logger.info("", `Adding ${this.spec.name} in ${numberOfPackages}`);
 
@@ -86,18 +96,18 @@ class AddCommand extends Command {
     if (this.options.bootstrap !== false) {
       chain = chain.then(() => {
         const argv = Object.assign({}, this.options, {
-          args : [],
-          cwd : this.project.rootPath,
+          args: [],
+          cwd: this.project.rootPath,
           // silence initial cli version logging, etc
-          composed : "add",
+          composed: "add",
           // NEVER pass filter-options, it is very bad
-          scope : undefined,
-          ignore : undefined,
-          private : undefined,
-          since : undefined,
-          excludeDependents : undefined,
-          includeDependents : undefined,
-          includeDependencies : undefined,
+          scope: undefined,
+          ignore: undefined,
+          private: undefined,
+          since: undefined,
+          excludeDependents: undefined,
+          includeDependents: undefined,
+          includeDependencies: undefined,
         });
 
         return bootstrap(argv);
@@ -108,7 +118,7 @@ class AddCommand extends Command {
   }
 
   collectPackagesToChange() {
-    const {name : targetName} = this.spec;
+    const { name: targetName } = this.spec;
     let result = this.filteredPackages;
 
     // Skip packages that only would install themselves
@@ -131,24 +141,20 @@ class AddCommand extends Command {
         return true;
       }
 
-      return getRangeToReference(this.spec, deps, pkg.location,
-                                 this.savePrefix) !== deps[targetName];
+      return getRangeToReference(this.spec, deps, pkg.location, this.savePrefix) !== deps[targetName];
     });
 
     return result;
   }
 
   makeChanges() {
-    const {name : targetName} = this.spec;
+    const { name: targetName } = this.spec;
 
     return pMap(this.packagesToChange, pkg => {
       const deps = this.getPackageDeps(pkg);
-      const range =
-          getRangeToReference(this.spec, deps, pkg.location, this.savePrefix);
+      const range = getRangeToReference(this.spec, deps, pkg.location, this.savePrefix);
 
-      this.logger.verbose(
-          "add",
-          `${targetName}@${range} to ${this.dependencyType} in ${pkg.name}`);
+      this.logger.verbose("add", `${targetName}@${range} to ${this.dependencyType} in ${pkg.name}`);
       deps[targetName] = range;
 
       return pkg.serialize();
@@ -170,23 +176,22 @@ class AddCommand extends Command {
     if (this.selfSatisfied) {
       const node = this.packageGraph.get(this.spec.name);
 
-      return Promise.resolve(this.spec.saveRelativeFileSpec ? node.location
-                                                            : node.version);
+      return Promise.resolve(this.spec.saveRelativeFileSpec ? node.location : node.version);
     }
 
     // @see https://github.com/zkat/pacote/blob/latest/lib/util/opt-check.js
     const opts = npmConf({
-      includeDeprecated : false,
+      includeDeprecated: false,
       // we can't pass everything, as our --scope conflicts with pacote's
       // --scope
-      registry : this.options.registry,
+      registry: this.options.registry,
     });
 
     return getManifest(this.spec, opts.snapshot).then(pkg => pkg.version);
   }
 
   packageSatisfied() {
-    const {name, fetchSpec} = this.spec;
+    const { name, fetchSpec } = this.spec;
     const pkg = this.packageGraph.get(name);
 
     if (!pkg) {
@@ -201,11 +206,11 @@ class AddCommand extends Command {
     }
 
     // existing relative file spec means local dep should be added the same way
-    this.spec.saveRelativeFileSpec =
-        Array.from(this.packageGraph.values())
-            .some(node => node.localDependencies.size &&
-                          Array.from(node.localDependencies.values())
-                              .some(resolved => resolved.type === "directory"));
+    this.spec.saveRelativeFileSpec = Array.from(this.packageGraph.values()).some(
+      node =>
+        node.localDependencies.size &&
+        Array.from(node.localDependencies.values()).some(resolved => resolved.type === "directory")
+    );
 
     if (fetchSpec === "latest") {
       return true;

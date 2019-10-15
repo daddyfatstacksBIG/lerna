@@ -4,20 +4,21 @@ const path = require("path");
 
 const cliRunner = require("@lerna-test/cli-runner");
 const cloneFixture = require("@lerna-test/clone-fixture")(
-    path.resolve(__dirname, "../commands/publish/__tests__"));
+  path.resolve(__dirname, "../commands/publish/__tests__")
+);
 
 const env = {
   // never actually upload when calling `npm publish`
-  npm_config_dry_run : true,
+  npm_config_dry_run: true,
   // skip npm package validation, none of the stubs are real
-  LERNA_INTEGRATION : "SKIP",
+  LERNA_INTEGRATION: "SKIP",
 };
 
 test("lerna publish lifecycle scripts", async () => {
-  const {cwd} = await cloneFixture("lifecycle");
-  const args = [ "publish", "minor", "--yes" ];
+  const { cwd } = await cloneFixture("lifecycle");
+  const args = ["publish", "minor", "--yes"];
 
-  const {stdout} = await cliRunner(cwd, env)(...args);
+  const { stdout } = await cliRunner(cwd, env)(...args);
   expect(stdout).toMatchInlineSnapshot(`
 
 Changes:
@@ -116,20 +117,19 @@ Successfully published:
 });
 
 test("lerna publish --ignore-prepublish", async () => {
-  const {cwd} = await cloneFixture("lifecycle");
-  const args = [ "publish", "--ignore-prepublish", "patch", "--yes" ];
+  const { cwd } = await cloneFixture("lifecycle");
+  const args = ["publish", "--ignore-prepublish", "patch", "--yes"];
 
-  const {stdout} = await cliRunner(cwd, env)(...args);
+  const { stdout } = await cliRunner(cwd, env)(...args);
   expect(stdout).not.toContain("prepublish-root");
   expect(stdout).not.toContain("prepublish-package-2");
 });
 
 test("lerna publish --ignore-scripts", async () => {
-  const {cwd} = await cloneFixture("lifecycle");
-  const args =
-      [ "publish", "--ignore-scripts", "major", "--yes", "--loglevel=verbose" ];
+  const { cwd } = await cloneFixture("lifecycle");
+  const args = ["publish", "--ignore-scripts", "major", "--yes", "--loglevel=verbose"];
 
-  const {stdout} = await cliRunner(cwd, env)(...args);
+  const { stdout } = await cliRunner(cwd, env)(...args);
   expect(stdout).toMatchInlineSnapshot(`
 
     Changes:

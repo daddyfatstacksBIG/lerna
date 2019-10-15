@@ -21,42 +21,41 @@ const normalizeRelativeDir = require("@lerna-test/normalize-relative-dir");
 const updateLernaConfig = require("@lerna-test/update-lerna-config");
 
 // file under test
-const lernaBootstrap =
-    require("@lerna-test/command-runner")(require("../command"));
+const lernaBootstrap = require("@lerna-test/command-runner")(require("../command"));
 
 // assertion helpers
 const installedPackagesInDirectories = testDir =>
-    npmInstall.dependencies.mock.calls.reduce((obj, [ pkg, dependencies ]) => {
-      const relative = normalizeRelativeDir(testDir, pkg.location);
-      obj[relative || "ROOT"] = dependencies;
-      return obj;
-    }, {});
+  npmInstall.dependencies.mock.calls.reduce((obj, [pkg, dependencies]) => {
+    const relative = normalizeRelativeDir(testDir, pkg.location);
+    obj[relative || "ROOT"] = dependencies;
+    return obj;
+  }, {});
 
-const removedDirectories = testDir => rimrafDir.mock.calls.map(
-    ([ directory ]) => normalizeRelativeDir(testDir, directory));
+const removedDirectories = testDir =>
+  rimrafDir.mock.calls.map(([directory]) => normalizeRelativeDir(testDir, directory));
 
 const symlinkedDirectories = testDir =>
-    createSymlink.mock.calls
-        .slice()
-        // ensure sort is always consistent, despite promise variability
-        .sort((a, b) => {
-          // two-dimensional path sort
-          if (b[0] === a[0]) {
-            if (b[1] === a[1]) {
-              // ignore third field
-              return 0;
-            }
+  createSymlink.mock.calls
+    .slice()
+    // ensure sort is always consistent, despite promise variability
+    .sort((a, b) => {
+      // two-dimensional path sort
+      if (b[0] === a[0]) {
+        if (b[1] === a[1]) {
+          // ignore third field
+          return 0;
+        }
 
-            return b[1] < a[1] ? 1 : -1;
-          }
+        return b[1] < a[1] ? 1 : -1;
+      }
 
-          return b[0] < a[0] ? 1 : -1;
-        })
-        .map(([ src, dest, type ]) => ({
-               _src : normalizeRelativeDir(testDir, src),
-               dest : normalizeRelativeDir(testDir, dest),
-               type,
-             }));
+      return b[0] < a[0] ? 1 : -1;
+    })
+    .map(([src, dest, type]) => ({
+      _src: normalizeRelativeDir(testDir, src),
+      dest: normalizeRelativeDir(testDir, dest),
+      type,
+    }));
 
 describe("BootstrapCommand", () => {
   // stub rimraf because we trust isaacs
@@ -83,18 +82,17 @@ describe("BootstrapCommand", () => {
       delete process.env.LERNA_ROOT_PATH;
     });
 
-    it("should run preinstall, postinstall and prepublish scripts",
-       async () => {
-         const testDir = await initFixture("lifecycle-scripts");
+    it("should run preinstall, postinstall and prepublish scripts", async () => {
+      const testDir = await initFixture("lifecycle-scripts");
 
-         await lernaBootstrap(testDir)();
+      await lernaBootstrap(testDir)();
 
-         expect(runLifecycle.getOrderedCalls()).toEqual([
-           [ "package-preinstall", "preinstall" ],
-           [ "package-postinstall", "postinstall" ],
-           [ "package-prepublish", "prepublish" ],
-         ]);
-       });
+      expect(runLifecycle.getOrderedCalls()).toEqual([
+        ["package-preinstall", "preinstall"],
+        ["package-postinstall", "postinstall"],
+        ["package-prepublish", "prepublish"],
+      ]);
+    });
 
     it("does not run prepublish scripts with --ignore-prepublish", async () => {
       const testDir = await initFixture("lifecycle-scripts");
@@ -102,8 +100,8 @@ describe("BootstrapCommand", () => {
       await lernaBootstrap(testDir)("--ignore-prepublish");
 
       expect(runLifecycle.getOrderedCalls()).toEqual([
-        [ "package-preinstall", "preinstall" ],
-        [ "package-postinstall", "postinstall" ],
+        ["package-preinstall", "preinstall"],
+        ["package-postinstall", "postinstall"],
       ]);
     });
 
@@ -113,14 +111,15 @@ describe("BootstrapCommand", () => {
       await lernaBootstrap(testDir)("--ignore-scripts");
 
       expect(runLifecycle).not.toHaveBeenCalled();
-      expect(npmInstall.dependencies)
-          .toHaveBeenCalledWith(expect.objectContaining({
-            name : "package-prepare",
-          }),
-                                [ "tiny-tarball@^1.0.0" ],
-                                expect.objectContaining({
-                                  npmClientArgs : [ "--ignore-scripts" ],
-                                }));
+      expect(npmInstall.dependencies).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "package-prepare",
+        }),
+        ["tiny-tarball@^1.0.0"],
+        expect.objectContaining({
+          npmClientArgs: ["--ignore-scripts"],
+        })
+      );
     });
 
     it("should not recurse from hoisted root lifecycle", async () => {
@@ -145,27 +144,30 @@ describe("BootstrapCommand", () => {
       expect(removedDirectories(testDir)).toMatchSnapshot();
 
       // root includes explicit dependencies and hoisted from leaves
-      expect(npmInstall.dependencies)
-          .toHaveBeenCalledWith(
-              expect.objectContaining({
-                name : "basic",
-              }),
-              [ "bar@^2.0.0", "foo@^1.0.0", "@test/package-1@^0.0.0" ], {
-                registry : undefined,
-                npmClient : "npm",
-                npmClientArgs : [],
-                mutex : undefined,
-                // npmGlobalStyle is not included at all
-              });
+      expect(npmInstall.dependencies).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "basic",
+        }),
+        ["bar@^2.0.0", "foo@^1.0.0", "@test/package-1@^0.0.0"],
+        {
+          registry: undefined,
+          npmClient: "npm",
+          npmClientArgs: [],
+          mutex: undefined,
+          // npmGlobalStyle is not included at all
+        }
+      );
 
       // foo@0.1.2 differs from the more common foo@^1.0.0
-      expect(npmInstall.dependencies)
-          .toHaveBeenLastCalledWith(expect.objectContaining({
-            name : "package-3",
-          }),
-                                    [ "foo@0.1.12" ], expect.objectContaining({
-                                      npmGlobalStyle : true,
-                                    }));
+      expect(npmInstall.dependencies).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          name: "package-3",
+        }),
+        ["foo@0.1.12"],
+        expect.objectContaining({
+          npmGlobalStyle: true,
+        })
+      );
     });
 
     it("should not hoist when disallowed", async () => {
@@ -181,8 +183,8 @@ describe("BootstrapCommand", () => {
       const testDir = await initFixture("basic");
 
       await updateLernaConfig(testDir, {
-        hoist : true,
-        nohoist : [ "@test/package-1" ],
+        hoist: true,
+        nohoist: ["@test/package-1"],
       });
       await lernaBootstrap(testDir)();
 
@@ -199,9 +201,9 @@ describe("BootstrapCommand", () => {
       try {
         await lernaBootstrap(testDir)();
       } catch (err) {
-        expect(err.message)
-            .toMatch(
-                "--hoist is not supported with --npm-client=yarn, use yarn workspaces instead");
+        expect(err.message).toMatch(
+          "--hoist is not supported with --npm-client=yarn, use yarn workspaces instead"
+        );
       }
     });
   });
@@ -221,39 +223,37 @@ describe("BootstrapCommand", () => {
   });
 
   describe("with --ci", () => {
-    it("should call npmInstall with ci subCommand if on npm 5.7.0 or later",
-       async () => {
-         const testDir = await initFixture("ci");
+    it("should call npmInstall with ci subCommand if on npm 5.7.0 or later", async () => {
+      const testDir = await initFixture("ci");
 
-         await lernaBootstrap(testDir)("--ci");
+      await lernaBootstrap(testDir)("--ci");
 
-         expect(hasNpmVersion).toHaveBeenLastCalledWith(">=5.7.0");
-         expect(npmInstall.dependencies.mock.calls[0][2]).toEqual({
-           subCommand : "ci",
-           registry : undefined,
-           npmClient : "npm",
-           npmClientArgs : [],
-           npmGlobalStyle : false,
-           mutex : undefined,
-         });
-       });
+      expect(hasNpmVersion).toHaveBeenLastCalledWith(">=5.7.0");
+      expect(npmInstall.dependencies.mock.calls[0][2]).toEqual({
+        subCommand: "ci",
+        registry: undefined,
+        npmClient: "npm",
+        npmClientArgs: [],
+        npmGlobalStyle: false,
+        mutex: undefined,
+      });
+    });
 
-    it("should not pass subCommand to npmInstall if on npm version earlier than 5.7.0",
-       async () => {
-         const testDir = await initFixture("ci");
+    it("should not pass subCommand to npmInstall if on npm version earlier than 5.7.0", async () => {
+      const testDir = await initFixture("ci");
 
-         hasNpmVersion.mockReturnValueOnce(false);
+      hasNpmVersion.mockReturnValueOnce(false);
 
-         await lernaBootstrap(testDir)("--ci");
+      await lernaBootstrap(testDir)("--ci");
 
-         expect(npmInstall.dependencies.mock.calls[0][2]).toEqual({
-           registry : undefined,
-           npmClient : "npm",
-           npmClientArgs : [],
-           npmGlobalStyle : false,
-           mutex : undefined,
-         });
-       });
+      expect(npmInstall.dependencies.mock.calls[0][2]).toEqual({
+        registry: undefined,
+        npmClient: "npm",
+        npmClientArgs: [],
+        npmGlobalStyle: false,
+        mutex: undefined,
+      });
+    });
 
     it("should not run npm ci when hoisting", async () => {
       const testDir = await initFixture("basic");
@@ -261,9 +261,9 @@ describe("BootstrapCommand", () => {
       await lernaBootstrap(testDir)("--hoist", "package-*", "--ci");
 
       expect(npmInstall.dependencies.mock.calls[0][2]).toMatchObject({
-        subCommand : "install", // not "ci"
-        npmClient : "npm",
-        npmClientArgs : [ "--no-save" ],
+        subCommand: "install", // not "ci"
+        npmClient: "npm",
+        npmClientArgs: ["--no-save"],
       });
     });
 
@@ -271,9 +271,9 @@ describe("BootstrapCommand", () => {
       const testDir = await initFixture("ci");
 
       await updateLernaConfig(testDir, {
-        command : {
-          bootstrap : {
-            ci : false,
+        command: {
+          bootstrap: {
+            ci: false,
           },
         },
       });
@@ -281,11 +281,11 @@ describe("BootstrapCommand", () => {
 
       expect(hasNpmVersion).not.toHaveBeenCalled();
       expect(npmInstall.dependencies.mock.calls[0][2]).toEqual({
-        registry : undefined,
-        npmClient : "npm",
-        npmClientArgs : [],
-        npmGlobalStyle : false,
-        mutex : undefined,
+        registry: undefined,
+        npmClient: "npm",
+        npmClientArgs: [],
+        npmGlobalStyle: false,
+        mutex: undefined,
       });
     });
   });
@@ -321,31 +321,29 @@ describe("BootstrapCommand", () => {
     it("should respect --force-local", async () => {
       const testDir = await initFixture("basic");
 
-      await lernaBootstrap(testDir)("--scope", "@test/package-1", "--scope",
-                                    "package-4", "--force-local");
+      await lernaBootstrap(testDir)("--scope", "@test/package-1", "--scope", "package-4", "--force-local");
 
       expect(installedPackagesInDirectories(testDir)).toMatchSnapshot();
       expect(symlinkedDirectories(testDir)).toMatchSnapshot();
     });
 
-    it("should respect --force-local when a single package is in scope",
-       async () => {
-         const testDir = await initFixture("basic");
+    it("should respect --force-local when a single package is in scope", async () => {
+      const testDir = await initFixture("basic");
 
-         await lernaBootstrap(testDir)("--scope", "package-4", "--force-local");
+      await lernaBootstrap(testDir)("--scope", "package-4", "--force-local");
 
-         // no packages were installed from the registry
-         const installed = installedPackagesInDirectories(testDir);
-         expect(installed["packages/package-4"] || []).toEqual([]);
+      // no packages were installed from the registry
+      const installed = installedPackagesInDirectories(testDir);
+      expect(installed["packages/package-4"] || []).toEqual([]);
 
-         // package-3 was resolved as a local symlink
-         const symlinked = symlinkedDirectories(testDir);
-         expect(symlinked).toContainEqual({
-           _src : "packages/package-3",
-           dest : "packages/package-4/node_modules/package-3",
-           type : "junction",
-         });
-       });
+      // package-3 was resolved as a local symlink
+      const symlinked = symlinkedDirectories(testDir);
+      expect(symlinked).toContainEqual({
+        _src: "packages/package-3",
+        dest: "packages/package-4/node_modules/package-3",
+        type: "junction",
+      });
+    });
 
     it("should respect --contents argument during linking step", async () => {
       const testDir = await initFixture("basic");
@@ -363,21 +361,20 @@ describe("BootstrapCommand", () => {
       expect(installedPackagesInDirectories(testDir)).toMatchSnapshot();
       expect(symlinkedDirectories(testDir)).toMatchSnapshot();
       expect(npmInstall.dependencies.mock.calls[0][2]).toMatchObject({
-        subCommand : "install", // not "ci"
-        npmClient : "npm",
-        npmClientArgs : [ "--no-save" ],
+        subCommand: "install", // not "ci"
+        npmClient: "npm",
+        npmClientArgs: ["--no-save"],
       });
     });
 
     it("should not update yarn.lock when filtering", async () => {
       const testDir = await initFixture("basic");
 
-      await lernaBootstrap(testDir)("--scope", "@test/package-2",
-                                    "--npm-client", "yarn", "--ci");
+      await lernaBootstrap(testDir)("--scope", "@test/package-2", "--npm-client", "yarn", "--ci");
 
       expect(npmInstall.dependencies.mock.calls[0][2]).toMatchObject({
-        npmClient : "yarn",
-        npmClientArgs : [ "--pure-lockfile" ],
+        npmClient: "yarn",
+        npmClientArgs: ["--pure-lockfile"],
       });
     });
 
@@ -386,14 +383,15 @@ describe("BootstrapCommand", () => {
 
       await lernaBootstrap(testDir)();
 
-      expect(npmInstall.dependencies)
-          .toHaveBeenCalledWith(expect.objectContaining({
-            name : "@test/package-2",
-          }),
-                                expect.arrayContaining([ "foo@^1.0.0" ]),
-                                expect.objectContaining({
-                                  npmGlobalStyle : false,
-                                }));
+      expect(npmInstall.dependencies).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "@test/package-2",
+        }),
+        expect.arrayContaining(["foo@^1.0.0"]),
+        expect.objectContaining({
+          npmGlobalStyle: false,
+        })
+      );
     });
   });
 
@@ -405,9 +403,7 @@ describe("BootstrapCommand", () => {
 
       expect(installedPackagesInDirectories(testDir)).toMatchSnapshot();
       expect(symlinkedDirectories(testDir)).toMatchSnapshot();
-      expect(runLifecycle.getOrderedCalls()).toEqual([
-        [ "@test/package-1", "prepublish" ]
-      ]);
+      expect(runLifecycle.getOrderedCalls()).toEqual([["@test/package-1", "prepublish"]]);
     });
 
     it("should not bootstrap ignored packages", async () => {
@@ -418,30 +414,29 @@ describe("BootstrapCommand", () => {
       expect(installedPackagesInDirectories(testDir)).toMatchSnapshot();
     });
 
-    it("bootstraps dependencies not included by --scope with --include-filtered-dependencies",
-       async () => {
-         const testDir = await initFixture("extra");
+    it("bootstraps dependencies not included by --scope with --include-filtered-dependencies", async () => {
+      const testDir = await initFixture("extra");
 
-         // we scope to package-2 only but should still install package-1 as it
-         // is a dependency of package-2
-         await lernaBootstrap(testDir)("--scope", "package-2",
-                                       "--include-filtered-dependencies");
+      // we scope to package-2 only but should still install package-1 as it
+      // is a dependency of package-2
+      await lernaBootstrap(testDir)("--scope", "package-2", "--include-filtered-dependencies");
 
-         expect(installedPackagesInDirectories(testDir)).toMatchSnapshot();
-       });
+      expect(installedPackagesInDirectories(testDir)).toMatchSnapshot();
+    });
 
-    it("bootstraps dependencies excluded by --ignore with --include-filtered-dependencies",
-       async () => {
-         const testDir = await initFixture("extra");
+    it("bootstraps dependencies excluded by --ignore with --include-filtered-dependencies", async () => {
+      const testDir = await initFixture("extra");
 
-         // we ignore package 1 but it should still be installed because it is a
-         // dependency of package-2
-         await lernaBootstrap(testDir)("--ignore",
-                                       "{@test/package-1,package-@(3|4)}",
-                                       "--include-filtered-dependencies");
+      // we ignore package 1 but it should still be installed because it is a
+      // dependency of package-2
+      await lernaBootstrap(testDir)(
+        "--ignore",
+        "{@test/package-1,package-@(3|4)}",
+        "--include-filtered-dependencies"
+      );
 
-         expect(installedPackagesInDirectories(testDir)).toMatchSnapshot();
-       });
+      expect(installedPackagesInDirectories(testDir)).toMatchSnapshot();
+    });
 
     it("hoists appropriately", async () => {
       const testDir = await initFixture("extra");
@@ -468,20 +463,19 @@ describe("BootstrapCommand", () => {
       await lernaBootstrap(testDir)("--npm-client", "yarn");
 
       expect(npmInstall.dependencies.mock.calls[0][2]).toMatchObject({
-        npmClient : "yarn",
-        mutex : expect.stringMatching(/^network:\d+$/),
+        npmClient: "yarn",
+        mutex: expect.stringMatching(/^network:\d+$/),
       });
     });
 
     it("gets user defined mutex when --npm-client=yarn", async () => {
       const testDir = await initFixture("cold");
 
-      await lernaBootstrap(testDir)("--npm-client", "yarn", "--mutex",
-                                    "file:/test/this/path");
+      await lernaBootstrap(testDir)("--npm-client", "yarn", "--mutex", "file:/test/this/path");
 
       expect(npmInstall.dependencies.mock.calls[0][2]).toMatchObject({
-        npmClient : "yarn",
-        mutex : "file:/test/this/path",
+        npmClient: "yarn",
+        mutex: "file:/test/this/path",
       });
     });
 
@@ -489,7 +483,7 @@ describe("BootstrapCommand", () => {
       const testDir = await initFixture("cold");
 
       await updateLernaConfig(testDir, {
-        hoist : true,
+        hoist: true,
       });
       await lernaBootstrap(testDir)();
 
@@ -498,32 +492,31 @@ describe("BootstrapCommand", () => {
     });
   });
 
-  describe(
-      "with external dependencies that have already been installed", () => {
-        it("should not get re-installed", async () => {
-          const testDir = await initFixture("warm");
+  describe("with external dependencies that have already been installed", () => {
+    it("should not get re-installed", async () => {
+      const testDir = await initFixture("warm");
 
-          await lernaBootstrap(testDir)();
+      await lernaBootstrap(testDir)();
 
-          expect(npmInstall.dependencies).not.toHaveBeenCalled();
-        });
+      expect(npmInstall.dependencies).not.toHaveBeenCalled();
+    });
 
-        it("hoists appropriately", async () => {
-          const testDir = await initFixture("warm");
+    it("hoists appropriately", async () => {
+      const testDir = await initFixture("warm");
 
-          await updateLernaConfig(testDir, {
-            command : {
-              bootstrap : {
-                hoist : true,
-              },
-            },
-          });
-          await lernaBootstrap(testDir)();
-
-          expect(installedPackagesInDirectories(testDir)).toMatchSnapshot();
-          expect(symlinkedDirectories(testDir)).toMatchSnapshot();
-        });
+      await updateLernaConfig(testDir, {
+        command: {
+          bootstrap: {
+            hoist: true,
+          },
+        },
       });
+      await lernaBootstrap(testDir)();
+
+      expect(installedPackagesInDirectories(testDir)).toMatchSnapshot();
+      expect(symlinkedDirectories(testDir)).toMatchSnapshot();
+    });
+  });
 
   describe("with at least one external dependency to install", () => {
     it("should install all dependencies", async () => {
@@ -561,17 +554,17 @@ describe("BootstrapCommand", () => {
       await lernaBootstrap(testDir)();
 
       expect(installedPackagesInDirectories(testDir)).toMatchSnapshot();
-      expect(npmInstall.dependencies)
-          .toHaveBeenLastCalledWith(
-              expect.objectContaining({
-                name : "@test/package-1",
-              }),
-              expect.arrayContaining([ "foo@^1.0.0" ]),
-              expect.objectContaining({
-                registry : "https://my-secure-registry/npm",
-                npmClient : "npm",
-                npmGlobalStyle : false,
-              }));
+      expect(npmInstall.dependencies).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          name: "@test/package-1",
+        }),
+        expect.arrayContaining(["foo@^1.0.0"]),
+        expect.objectContaining({
+          registry: "https://my-secure-registry/npm",
+          npmClient: "npm",
+          npmGlobalStyle: false,
+        })
+      );
     });
   });
 
@@ -583,7 +576,7 @@ describe("BootstrapCommand", () => {
         await lernaBootstrap(testDir)("--", "--no-optional", "--production");
 
         expect(npmInstall.dependencies.mock.calls[0][2]).toMatchObject({
-          npmClientArgs : [ "--no-optional", "--production" ],
+          npmClientArgs: ["--no-optional", "--production"],
         });
       });
     });
@@ -595,7 +588,7 @@ describe("BootstrapCommand", () => {
         await lernaBootstrap(testDir)("--", "--no-optional");
 
         expect(npmInstall.dependencies.mock.calls[0][2]).toMatchObject({
-          npmClientArgs : [ "--production", "--no-optional" ],
+          npmClientArgs: ["--production", "--no-optional"],
         });
       });
     });
@@ -608,29 +601,28 @@ describe("BootstrapCommand", () => {
       await lernaBootstrap(testDir)();
 
       expect(npmInstall.dependencies).not.toHaveBeenCalled();
-      expect(npmInstall)
-          .toHaveBeenLastCalledWith(
-              expect.objectContaining({name : "root"}),
-              expect.objectContaining({
-                npmClient : "yarn",
-                mutex : expect.stringMatching(/^network:\d+$/),
-              }));
+      expect(npmInstall).toHaveBeenLastCalledWith(
+        expect.objectContaining({ name: "root" }),
+        expect.objectContaining({
+          npmClient: "yarn",
+          mutex: expect.stringMatching(/^network:\d+$/),
+        })
+      );
     });
 
-    it("errors when package.json workspaces exists but --use-workspaces is not enabled",
-       async () => {
-         expect.assertions(1);
+    it("errors when package.json workspaces exists but --use-workspaces is not enabled", async () => {
+      expect.assertions(1);
 
-         const testDir = await initFixture("yarn-workspaces");
+      const testDir = await initFixture("yarn-workspaces");
 
-         try {
-           await lernaBootstrap(testDir)("--no-use-workspaces");
-         } catch (err) {
-           expect(err.message)
-               .toMatch(
-                   "Yarn workspaces are configured in package.json, but not enabled in lerna.json!");
-         }
-       });
+      try {
+        await lernaBootstrap(testDir)("--no-use-workspaces");
+      } catch (err) {
+        expect(err.message).toMatch(
+          "Yarn workspaces are configured in package.json, but not enabled in lerna.json!"
+        );
+      }
+    });
   });
 
   describe("with relative file: specifiers in root dependencies", () => {
@@ -640,13 +632,13 @@ describe("BootstrapCommand", () => {
       await lernaBootstrap(testDir)();
 
       expect(npmInstall.dependencies).not.toHaveBeenCalled();
-      expect(npmInstall)
-          .toHaveBeenLastCalledWith(
-              expect.objectContaining({name : "relative-file-specs"}),
-              expect.objectContaining({
-                npmClient : "npm",
-                stdio : "inherit",
-              }));
+      expect(npmInstall).toHaveBeenLastCalledWith(
+        expect.objectContaining({ name: "relative-file-specs" }),
+        expect.objectContaining({
+          npmClient: "npm",
+          stdio: "inherit",
+        })
+      );
     });
   });
 
@@ -659,8 +651,7 @@ describe("BootstrapCommand", () => {
       try {
         await lernaBootstrap(testDir)();
       } catch (err) {
-        expect(err.message)
-            .toMatch(`Package name "package-1" used in multiple packages`);
+        expect(err.message).toMatch(`Package name "package-1" used in multiple packages`);
       }
     });
   });
@@ -674,8 +665,7 @@ describe("BootstrapCommand", () => {
       try {
         await lernaBootstrap(testDir)("--reject-cycles");
       } catch (err) {
-        expect(err.message)
-            .toMatch("Dependency cycles detected, you should fix these!");
+        expect(err.message).toMatch("Dependency cycles detected, you should fix these!");
       }
     });
   });
