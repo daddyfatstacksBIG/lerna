@@ -2,14 +2,15 @@
 
 const npa = require("npm-package-arg");
 const ValidationError = require("@lerna/validation-error");
-const { CyclicPackageGraphNode } = require("./lib/cyclic-package-graph-node");
-const { PackageGraphNode } = require("./lib/package-graph-node");
-const { reportCycles } = require("./lib/report-cycles");
+const {CyclicPackageGraphNode} = require("./lib/cyclic-package-graph-node");
+const {PackageGraphNode} = require("./lib/package-graph-node");
+const {reportCycles} = require("./lib/report-cycles");
 
 /**
  * A PackageGraph.
  * @constructor
- * @param {!Array.<Package>} packages An array of Packages to build the graph out of.
+ * @param {!Array.<Package>} packages An array of Packages to build the graph
+ *     out of.
  * @param {String} graphType ("allDependencies" or "dependencies")
  *    Pass "dependencies" to create a graph of only dependencies,
  *    excluding the devDependencies that would normally be included.
@@ -23,39 +24,37 @@ class PackageGraph extends Map {
       // weed out the duplicates
       const seen = new Map();
 
-      for (const { name, location } of packages) {
+      for (const {name, location} of packages) {
         if (seen.has(name)) {
           seen.get(name).push(location);
         } else {
-          seen.set(name, [location]);
+          seen.set(name, [ location ]);
         }
       }
 
       for (const [name, locations] of seen) {
         if (locations.length > 1) {
-          throw new ValidationError(
-            "ENAME",
-            [`Package name "${name}" used in multiple packages:`, ...locations].join("\n\t")
-          );
+          throw new ValidationError("ENAME", [
+            `Package name "${name}" used in multiple packages:`, ...locations
+          ].join("\n\t"));
         }
       }
     }
 
     this.forEach((currentNode, currentName) => {
       const graphDependencies =
-        graphType === "dependencies"
-          ? Object.assign({}, currentNode.pkg.optionalDependencies, currentNode.pkg.dependencies)
-          : Object.assign(
-              {},
-              currentNode.pkg.devDependencies,
-              currentNode.pkg.optionalDependencies,
-              currentNode.pkg.dependencies
-            );
+          graphType === "dependencies"
+              ? Object.assign({}, currentNode.pkg.optionalDependencies,
+                              currentNode.pkg.dependencies)
+              : Object.assign({}, currentNode.pkg.devDependencies,
+                              currentNode.pkg.optionalDependencies,
+                              currentNode.pkg.dependencies);
 
       Object.keys(graphDependencies).forEach(depName => {
         const depNode = this.get(depName);
-        // Yarn decided to ignore https://github.com/npm/npm/pull/15900 and implemented "link:"
-        // As they apparently have no intention of being compatible, we have to do it for them.
+        // Yarn decided to ignore https://github.com/npm/npm/pull/15900 and
+        // implemented "link:" As they apparently have no intention of being
+        // compatible, we have to do it for them.
         // @see https://github.com/yarnpkg/yarn/issues/4212
         const spec = graphDependencies[depName].replace(/^link:/, "file:");
         const resolved = npa.resolve(depName, spec, currentNode.location);
@@ -65,7 +64,8 @@ class PackageGraph extends Map {
           return currentNode.externalDependencies.set(depName, resolved);
         }
 
-        if (forceLocal || resolved.fetchSpec === depNode.location || depNode.satisfies(resolved)) {
+        if (forceLocal || resolved.fetchSpec === depNode.location ||
+            depNode.satisfies(resolved)) {
           // a local file: specifier OR a matching semver
           currentNode.localDependencies.set(depName, resolved);
           depNode.localDependents.set(currentName, currentNode);
@@ -82,41 +82,48 @@ class PackageGraph extends Map {
   }
 
   /**
-   * Takes a list of Packages and returns a list of those same Packages with any Packages
-   * they depend on. i.e if packageA depended on packageB `graph.addDependencies([packageA])`
-   * would return [packageA, packageB].
+   * Takes a list of Packages and returns a list of those same Packages with any
+   * Packages they depend on. i.e if packageA depended on packageB
+   * `graph.addDependencies([packageA])` would return [packageA, packageB].
    *
-   * @param {!Array.<Package>} filteredPackages The packages to include dependencies for.
-   * @return {Array.<Package>} The packages with any dependencies that weren't already included.
+   * @param {!Array.<Package>} filteredPackages The packages to include
+   *     dependencies for.
+   * @return {Array.<Package>} The packages with any dependencies that weren't
+   *     already included.
    */
   addDependencies(filteredPackages) {
     return this.extendList(filteredPackages, "localDependencies");
   }
 
   /**
-   * Takes a list of Packages and returns a list of those same Packages with any Packages
-   * that depend on them. i.e if packageC depended on packageD `graph.addDependents([packageD])`
-   * would return [packageD, packageC].
+   * Takes a list of Packages and returns a list of those same Packages with any
+   * Packages that depend on them. i.e if packageC depended on packageD
+   * `graph.addDependents([packageD])` would return [packageD, packageC].
    *
-   * @param {!Array.<Package>} filteredPackages The packages to include dependents for.
-   * @return {Array.<Package>} The packages with any dependents that weren't already included.
+   * @param {!Array.<Package>} filteredPackages The packages to include
+   *     dependents for.
+   * @return {Array.<Package>} The packages with any dependents that weren't
+   *     already included.
    */
   addDependents(filteredPackages) {
     return this.extendList(filteredPackages, "localDependents");
   }
 
   /**
-   * Extends a list of packages by traversing on a given property, which must refer to a
-   * `PackageGraphNode` property that is a collection of `PackageGraphNode`s
+   * Extends a list of packages by traversing on a given property, which must
+   * refer to a `PackageGraphNode` property that is a collection of
+   * `PackageGraphNode`s
    *
    * @param {!Array.<Package>} packageList The list of packages to extend
-   * @param {!String} nodeProp The property on `PackageGraphNode` used to traverse
-   * @return {Array.<Package>} The packages with any additional packages found by traversing
+   * @param {!String} nodeProp The property on `PackageGraphNode` used to
+   *     traverse
+   * @return {Array.<Package>} The packages with any additional packages found
+   *     by traversing
    *                           nodeProp
    */
   extendList(packageList, nodeProp) {
     // the current list of packages we are expanding using breadth-first-search
-    const search = new Set(packageList.map(({ name }) => this.get(name)));
+    const search = new Set(packageList.map(({name}) => this.get(name)));
 
     // an intermediate list of matched PackageGraphNodes
     const result = [];
@@ -153,7 +160,8 @@ class PackageGraph extends Map {
     this.forEach((currentNode, currentName) => {
       const seen = new Set();
 
-      const visits = walk => (dependentNode, dependentName, siblingDependents) => {
+      const visits = walk => (dependentNode, dependentName,
+                              siblingDependents) => {
         const step = walk.concat(dependentName);
 
         if (seen.has(dependentNode)) {
@@ -172,13 +180,10 @@ class PackageGraph extends Map {
 
         if (siblingDependents.has(currentName)) {
           // a transitive cycle
-          const cycleDependentName = Array.from(dependentNode.localDependencies.keys()).find(key =>
-            currentNode.localDependents.has(key)
-          );
-          const pathToCycle = step
-            .slice()
-            .reverse()
-            .concat(cycleDependentName);
+          const cycleDependentName =
+              Array.from(dependentNode.localDependencies.keys())
+                  .find(key => currentNode.localDependents.has(key));
+          const pathToCycle = step.slice().reverse().concat(cycleDependentName);
 
           cycleNodes.add(dependentNode);
           cyclePaths.add(pathToCycle);
@@ -187,17 +192,18 @@ class PackageGraph extends Map {
         dependentNode.localDependents.forEach(visits(step));
       };
 
-      currentNode.localDependents.forEach(visits([currentName]));
+      currentNode.localDependents.forEach(visits([ currentName ]));
     });
 
-    reportCycles(Array.from(cyclePaths, cycle => cycle.join(" -> ")), rejectCycles);
+    reportCycles(Array.from(cyclePaths, cycle => cycle.join(" -> ")),
+                 rejectCycles);
 
-    return [cyclePaths, cycleNodes];
+    return [ cyclePaths, cycleNodes ];
   }
 
   /**
-   * Returns the cycles of this graph. If two cycles share some elements, they will
-   * be returned as a single cycle.
+   * Returns the cycles of this graph. If two cycles share some elements, they
+   * will be returned as a single cycle.
    *
    * @param {!boolean} rejectCycles Whether or not to reject cycles
    * @returns Set<CyclicPackageGraphNode>
@@ -219,10 +225,8 @@ class PackageGraph extends Map {
         topLevelDependent = nodeToCycle.get(topLevelDependent);
       }
 
-      if (
-        topLevelDependent === baseNode ||
-        (topLevelDependent.isCycle && topLevelDependent.has(baseNode.name))
-      ) {
+      if (topLevelDependent === baseNode ||
+          (topLevelDependent.isCycle && topLevelDependent.has(baseNode.name))) {
         const cycle = new CyclicPackageGraphNode();
 
         walkStack.forEach(nodeInCycle => {
@@ -264,9 +268,7 @@ class PackageGraph extends Map {
    *
    * @param {Set<PackageGraphNode>} cycleNodes
    */
-  pruneCycleNodes(cycleNodes) {
-    return this.prune(...cycleNodes);
-  }
+  pruneCycleNodes(cycleNodes) { return this.prune(...cycleNodes); }
 
   /**
    * Remove all candidate nodes.

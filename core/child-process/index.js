@@ -9,14 +9,14 @@ const logTransformer = require("strong-log-transformer");
 const children = new Set();
 
 // when streaming processes are spawned, use this color for prefix
-const colorWheel = ["cyan", "magenta", "blue", "yellow", "green", "red"];
+const colorWheel = [ "cyan", "magenta", "blue", "yellow", "green", "red" ];
 const NUM_COLORS = colorWheel.length;
 
 // ever-increasing index ensures colors are always sequential
 let currentColor = 0;
 
 function exec(command, args, opts) {
-  const options = Object.assign({ stdio: "pipe" }, opts);
+  const options = Object.assign({stdio : "pipe"}, opts);
   const spawned = spawnProcess(command, args, options);
 
   return wrapError(spawned);
@@ -27,7 +27,7 @@ function execSync(command, args, opts) {
 }
 
 function spawn(command, args, opts) {
-  const options = Object.assign({}, opts, { stdio: "inherit" });
+  const options = Object.assign({}, opts, {stdio : "inherit"});
   const spawned = spawnProcess(command, args, options);
 
   return wrapError(spawned);
@@ -36,7 +36,7 @@ function spawn(command, args, opts) {
 // istanbul ignore next
 function spawnStreaming(command, args, opts, prefix) {
   const options = Object.assign({}, opts);
-  options.stdio = ["ignore", "pipe", "pipe"];
+  options.stdio = [ "ignore", "pipe", "pipe" ];
 
   const spawned = spawnProcess(command, args, options);
 
@@ -53,7 +53,8 @@ function spawnStreaming(command, args, opts, prefix) {
     stderrOpts.tag = `${color(prefix)}:`;
   }
 
-  // Avoid "Possible EventEmitter memory leak detected" warning due to piped stdio
+  // Avoid "Possible EventEmitter memory leak detected" warning due to piped
+  // stdio
   if (children.size > process.stdout.listenerCount("close")) {
     process.stdout.setMaxListeners(children.size);
     process.stderr.setMaxListeners(children.size);
@@ -65,9 +66,7 @@ function spawnStreaming(command, args, opts, prefix) {
   return wrapError(spawned);
 }
 
-function getChildProcessCount() {
-  return children.size;
-}
+function getChildProcessCount() { return children.size; }
 
 function getExitCode(result) {
   // https://nodejs.org/docs/latest-v6.x/api/child_process.html#child_process_event_close
@@ -82,7 +81,8 @@ function getExitCode(result) {
   }
 
   // istanbul ignore next: extremely weird
-  throw new TypeError(`Received unexpected exit code value ${JSON.stringify(result.code)}`);
+  throw new TypeError(
+      `Received unexpected exit code value ${JSON.stringify(result.code)}`);
 }
 
 function spawnProcess(command, args, opts) {

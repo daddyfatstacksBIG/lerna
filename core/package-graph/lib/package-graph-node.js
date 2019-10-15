@@ -12,27 +12,23 @@ class PackageGraphNode {
   constructor(pkg) {
     Object.defineProperties(this, {
       // immutable properties
-      name: {
-        enumerable: true,
-        value: pkg.name,
+      name : {
+        enumerable : true,
+        value : pkg.name,
       },
-      location: {
-        value: pkg.location,
+      location : {
+        value : pkg.location,
       },
-      prereleaseId: {
+      prereleaseId : {
         // an existing prerelease ID only matters at the beginning
-        value: prereleaseIdFromVersion(pkg.version),
+        value : prereleaseIdFromVersion(pkg.version),
       },
       // properties that might change over time
-      version: {
-        get() {
-          return pkg.version;
-        },
+      version : {
+        get() { return pkg.version; },
       },
-      pkg: {
-        get() {
-          return pkg;
-        },
+      pkg : {
+        get() { return pkg; },
       },
     });
 
@@ -48,8 +44,9 @@ class PackageGraphNode {
    * @param {!Result} resolved npm-package-arg Result object
    * @returns {Boolean}
    */
-  satisfies({ gitCommittish, gitRange, fetchSpec }) {
-    return semver.satisfies(this.version, gitCommittish || gitRange || fetchSpec);
+  satisfies({gitCommittish, gitRange, fetchSpec}) {
+    return semver.satisfies(this.version,
+                            gitCommittish || gitRange || fetchSpec);
   }
 
   /**
@@ -57,9 +54,7 @@ class PackageGraphNode {
    *
    * @returns {String}
    */
-  toString() {
-    return this.name;
-  }
+  toString() { return this.name; }
 }
 
 module.exports.PackageGraphNode = PackageGraphNode;

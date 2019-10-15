@@ -4,21 +4,20 @@ const path = require("path");
 
 const cliRunner = require("@lerna-test/cli-runner");
 const cloneFixture = require("@lerna-test/clone-fixture")(
-  path.resolve(__dirname, "../commands/publish/__tests__")
-);
+    path.resolve(__dirname, "../commands/publish/__tests__"));
 
 const env = {
   // never actually upload when calling `npm publish`
-  npm_config_dry_run: true,
+  npm_config_dry_run : true,
   // skip npm package validation, none of the stubs are real
-  LERNA_INTEGRATION: "SKIP",
+  LERNA_INTEGRATION : "SKIP",
 };
 
 test("lerna publish lifecycle scripts --loglevel=silent", async () => {
-  const { cwd } = await cloneFixture("lifecycle");
-  const args = ["publish", "minor", "--yes", "--loglevel", "silent"];
+  const {cwd} = await cloneFixture("lifecycle");
+  const args = [ "publish", "minor", "--yes", "--loglevel", "silent" ];
 
-  const { stdout } = await cliRunner(cwd, env)(...args);
+  const {stdout} = await cliRunner(cwd, env)(...args);
   expect(stdout).toMatchInlineSnapshot(`
 
 Changes:

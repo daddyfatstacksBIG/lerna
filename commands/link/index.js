@@ -9,14 +9,10 @@ const symlinkDependencies = require("@lerna/symlink-dependencies");
 
 module.exports = factory;
 
-function factory(argv) {
-  return new LinkCommand(argv);
-}
+function factory(argv) { return new LinkCommand(argv); }
 
 class LinkCommand extends Command {
-  get requiresGit() {
-    return false;
-  }
+  get requiresGit() { return false; }
 
   initialize() {
     this.allPackages = this.packageGraph.rawPackageList;
@@ -29,8 +25,9 @@ class LinkCommand extends Command {
     }
 
     this.targetGraph = this.options.forceLocal
-      ? new PackageGraph(this.allPackages, "allDependencies", "forceLocal")
-      : this.packageGraph;
+                           ? new PackageGraph(this.allPackages,
+                                              "allDependencies", "forceLocal")
+                           : this.packageGraph;
   }
 
   execute() {
@@ -38,7 +35,8 @@ class LinkCommand extends Command {
       return this.convertLinksToFileSpecs();
     }
 
-    return symlinkDependencies(this.allPackages, this.targetGraph, this.logger.newItem("link dependencies"));
+    return symlinkDependencies(this.allPackages, this.targetGraph,
+                               this.logger.newItem("link dependencies"));
   }
 
   convertLinksToFileSpecs() {
@@ -49,14 +47,16 @@ class LinkCommand extends Command {
     const savePrefix = "file:";
 
     for (const targetNode of this.targetGraph.values()) {
-      const resolved = { name: targetNode.name, type: "directory" };
+      const resolved = {name : targetNode.name, type : "directory"};
 
       // install root file: specifiers to avoid bootstrap
       rootDependencies[targetNode.name] = targetNode.pkg.resolved.saveSpec;
 
       for (const depNode of targetNode.localDependents.values()) {
-        const depVersion = slash(path.relative(depNode.pkg.location, targetNode.pkg.location));
-        // console.log("\n%s\n  %j: %j", depNode.name, name, `${savePrefix}${depVersion}`);
+        const depVersion =
+            slash(path.relative(depNode.pkg.location, targetNode.pkg.location));
+        // console.log("\n%s\n  %j: %j", depNode.name, name,
+        // `${savePrefix}${depVersion}`);
 
         depNode.pkg.updateLocalDependency(resolved, depVersion, savePrefix);
         changed.add(depNode);
@@ -72,9 +72,11 @@ class LinkCommand extends Command {
 
     // mutate project manifest, completely overwriting existing dependencies
     rootPkg.set("dependencies", rootDependencies);
-    rootPkg.set("devDependencies", Object.assign(rootPkg.get("devDependencies") || {}, hoisted));
+    rootPkg.set("devDependencies",
+                Object.assign(rootPkg.get("devDependencies") || {}, hoisted));
 
-    return pMap(changed, node => node.pkg.serialize()).then(() => rootPkg.serialize());
+    return pMap(changed, node => node.pkg.serialize())
+        .then(() => rootPkg.serialize());
   }
 }
 

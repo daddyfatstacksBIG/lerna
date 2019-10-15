@@ -4,7 +4,8 @@ const collectDependents = require("./collect-dependents");
 
 module.exports = collectPackages;
 
-function collectPackages(packages, { isCandidate = () => true, onInclude, excludeDependents } = {}) {
+function collectPackages(
+    packages, {isCandidate = () => true, onInclude, excludeDependents} = {}) {
   const candidates = new Set();
 
   packages.forEach((node, name) => {

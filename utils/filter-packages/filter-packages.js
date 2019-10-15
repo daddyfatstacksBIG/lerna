@@ -9,18 +9,23 @@ const ValidationError = require("@lerna/validation-error");
 module.exports = filterPackages;
 
 /**
- * Filters a given set of packages and returns all packages that match the scope glob
- * and do not match the ignore glob
+ * Filters a given set of packages and returns all packages that match the scope
+ * glob and do not match the ignore glob
  *
  * @param {!Array.<Package>} packagesToFilter The packages to filter
- * @param {Array.<String>} include A list of globs to match the package name against
- * @param {Array.<String>} exclude A list of globs to filter the package name against
+ * @param {Array.<String>} include A list of globs to match the package name
+ *     against
+ * @param {Array.<String>} exclude A list of globs to filter the package name
+ *     against
  * @param {Boolean} showPrivate When false, filter out private packages
- * @param {Boolean} continueIfNoMatch When true, do not throw if no package is matched
+ * @param {Boolean} continueIfNoMatch When true, do not throw if no package is
+ *     matched
  * @return {Array.<Package>} The packages with a name matching the glob
- * @throws when a given glob would produce an empty list of packages and `continueIfNoMatch` is not set.
+ * @throws when a given glob would produce an empty list of packages and
+ *     `continueIfNoMatch` is not set.
  */
-function filterPackages(packagesToFilter, include = [], exclude = [], showPrivate, continueIfNoMatch) {
+function filterPackages(packagesToFilter, include = [], exclude = [],
+                        showPrivate, continueIfNoMatch) {
   const filtered = new Set(packagesToFilter);
   const patterns = [].concat(arrify(include), negate(exclude));
 
@@ -51,7 +56,9 @@ function filterPackages(packagesToFilter, include = [], exclude = [], showPrivat
     }
 
     if (!filtered.size && !continueIfNoMatch) {
-      throw new ValidationError("EFILTER", util.format("No packages remain after filtering", patterns));
+      throw new ValidationError(
+          "EFILTER",
+          util.format("No packages remain after filtering", patterns));
     }
   }
 
@@ -64,7 +71,7 @@ function arrify(thing) {
   }
 
   if (!Array.isArray(thing)) {
-    return [thing];
+    return [ thing ];
   }
 
   return thing;
