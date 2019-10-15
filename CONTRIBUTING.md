@@ -1,7 +1,8 @@
 # Contributing to Lerna
 
-> Please note that this project is released with a [Contributor Code of Conduct](./CODE_OF_CONDUCT.md).
-> By participating in this project you agree to abide by its terms.
+> Please note that this project is released with a
+> [Contributor Code of Conduct](./CODE_OF_CONDUCT.md). By participating in this
+> project you agree to abide by its terms.
 
 First, ensure you have the [latest `npm`](https://docs.npmjs.com/).
 
@@ -14,12 +15,19 @@ $ npm ci
 
 ## Code Structure
 
-Currently, the [source](https://github.com/lerna/lerna/tree/master) is split up into a few categories:
+Currently, the [source](https://github.com/lerna/lerna/tree/master) is split up
+into a few categories:
 
-* [utils](https://github.com/lerna/lerna/tree/master/utils): shared packages to run git, npm, fs, and more.
-* [core](https://github.com/lerna/lerna/tree/master/core): basic building blocks, including Package-related abstractions and the command superclass.
-* [commands](https://github.com/lerna/lerna/tree/master/commands): each command has an `initialize` and `execute` function.
-  * These commands are consumed as yargs subcommands in [core/cli/index.js](https://github.com/lerna/lerna/blob/master/core/cli/index.js), which is required from the executable [`core/lerna/cli.js`](https://github.com/lerna/lerna/blob/master/core/lerna/cli.js).
+- [utils](https://github.com/lerna/lerna/tree/master/utils): shared packages to
+  run git, npm, fs, and more.
+- [core](https://github.com/lerna/lerna/tree/master/core): basic building
+  blocks, including Package-related abstractions and the command superclass.
+- [commands](https://github.com/lerna/lerna/tree/master/commands): each command
+  has an `initialize` and `execute` function.
+  - These commands are consumed as yargs subcommands in
+    [core/cli/index.js](https://github.com/lerna/lerna/blob/master/core/cli/index.js),
+    which is required from the executable
+    [`core/lerna/cli.js`](https://github.com/lerna/lerna/blob/master/core/lerna/cli.js).
 
 ## Commands
 
@@ -35,8 +43,8 @@ $ npm test -- --watch
 $ npm test -- --watch core/command
 ```
 
-By default, `npm test` also runs the linter.
-You can skip this by calling `jest` directly:
+By default, `npm test` also runs the linter. You can skip this by calling `jest`
+directly:
 
 ```sh
 $ npx jest
@@ -109,4 +117,6 @@ $ xdg-open coverage/lcov-report/index.html
 
 ### Submitting Pull Requests
 
-This project follows [GitHub's standard forking model](https://guides.github.com/activities/forking/). Please fork the project to submit pull requests. 
+This project follows
+[GitHub's standard forking model](https://guides.github.com/activities/forking/).
+Please fork the project to submit pull requests.

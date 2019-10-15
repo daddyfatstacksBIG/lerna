@@ -2,7 +2,8 @@
 
 > Add a dependency to matched packages
 
-Install [lerna](https://www.npmjs.com/package/lerna) for access to the `lerna` CLI.
+Install [lerna](https://www.npmjs.com/package/lerna) for access to the `lerna`
+CLI.
 
 ## Usage
 
@@ -10,18 +11,23 @@ Install [lerna](https://www.npmjs.com/package/lerna) for access to the `lerna` C
 $ lerna add <package>[@version] [--dev] [--exact]
 ```
 
-Add local or remote `package` as dependency to packages in the current Lerna repo. Note that only a single package can be added at a time compared to `yarn add` or `npm install`.
+Add local or remote `package` as dependency to packages in the current Lerna
+repo. Note that only a single package can be added at a time compared to
+`yarn add` or `npm install`.
 
 When run, this command will:
 
-1. Add `package` to each applicable package. Applicable are packages that are not `package` and are in scope
+1. Add `package` to each applicable package. Applicable are packages that are
+   not `package` and are in scope
 2. Bootstrap packages with changes to their manifest file (`package.json`)
 
-If no `version` specifier is provided, it defaults to the `latest` dist-tag, just like `npm install`.
+If no `version` specifier is provided, it defaults to the `latest` dist-tag,
+just like `npm install`.
 
 ## Options
 
-`lerna add` respects the `--ignore`, `--scope`, and `--include-dependencies` flags (see [Filter Flags](https://www.npmjs.com/package/@lerna/filter-options)).
+`lerna add` respects the `--ignore`, `--scope`, and `--include-dependencies`
+flags (see [Filter Flags](https://www.npmjs.com/package/@lerna/filter-options)).
 
 ### `--dev`
 
@@ -33,7 +39,8 @@ Add the new package to `devDependencies` instead of `dependencies`.
 $ lerna add --exact
 ```
 
-Add the new package with an exact version (e.g., `1.0.1`) rather than the default `^` semver range (e.g., `^1.0.1`).
+Add the new package with an exact version (e.g., `1.0.1`) rather than the
+default `^` semver range (e.g., `^1.0.1`).
 
 ### `--registry <url>`
 
