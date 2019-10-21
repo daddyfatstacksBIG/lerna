@@ -17,9 +17,10 @@ function updateLockfileVersion(pkg) {
       obj.version = pkg.version;
 
       return writeJsonFile(lockfilePath, obj, {
-        detectIndent: true,
-        indent: 2,
-      }).then(() => lockfilePath);
+               detectIndent : true,
+               indent : 2,
+             })
+          .then(() => lockfilePath);
     }
   });
 

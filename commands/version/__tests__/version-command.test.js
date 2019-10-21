@@ -26,22 +26,24 @@ const loggingOutput = require("@lerna-test/logging-output");
 const gitAdd = require("@lerna-test/git-add");
 const gitTag = require("@lerna-test/git-tag");
 const gitCommit = require("@lerna-test/git-commit");
-const initFixture = require("@lerna-test/init-fixture")(path.resolve(__dirname, "../../publish/__tests__"));
+const initFixture = require("@lerna-test/init-fixture")(
+    path.resolve(__dirname, "../../publish/__tests__"));
 const showCommit = require("@lerna-test/show-commit");
 const getCommitMessage = require("@lerna-test/get-commit-message");
 
 // file under test
-const lernaVersion = require("@lerna-test/command-runner")(require("../command"));
+const lernaVersion =
+    require("@lerna-test/command-runner")(require("../command"));
 
 // certain tests need to use the real thing
 const collectUpdatesActual = require.requireActual("@lerna/collect-updates");
 
 // assertion helpers
 const listDirty = cwd =>
-  // git ls-files --exclude-standard --modified --others
-  execa("git", ["ls-files", "--exclude-standard", "--modified", "--others"], { cwd }).then(result =>
-    result.stdout.split("\n").filter(Boolean)
-  );
+    // git ls-files --exclude-standard --modified --others
+    execa("git", [ "ls-files", "--exclude-standard", "--modified", "--others" ],
+          {cwd})
+        .then(result => result.stdout.split("\n").filter(Boolean));
 
 // stabilize commit SHA
 expect.addSnapshotSerializer(require("@lerna-test/serialize-git-sha"));
@@ -57,22 +59,19 @@ describe("VersionCommand", () => {
       expect(checkWorkingTree).toHaveBeenCalled();
 
       expect(PromptUtilities.select.mock.calls).toMatchSnapshot("prompt");
-      expect(PromptUtilities.confirm).toHaveBeenLastCalledWith(
-        "Are you sure you want to create these versions?"
-      );
+      expect(PromptUtilities.confirm)
+          .toHaveBeenLastCalledWith(
+              "Are you sure you want to create these versions?");
 
       expect(writePkg.updatedManifest("package-1")).toMatchSnapshot("gitHead");
 
       const patch = await showCommit(testDir);
       expect(patch).toMatchSnapshot("commit");
 
-      expect(libPush).toHaveBeenLastCalledWith(
-        "origin",
-        "master",
-        expect.objectContaining({
-          cwd: testDir,
-        })
-      );
+      expect(libPush).toHaveBeenLastCalledWith("origin", "master",
+                                               expect.objectContaining({
+                                                 cwd : testDir,
+                                               }));
       expect(output.logged()).toMatchSnapshot("console output");
     });
 
@@ -86,19 +85,21 @@ describe("VersionCommand", () => {
       }
     });
 
-    it("throws an error if conventional prerelease and graduate flags are both passed", async () => {
-      const testDir = await initFixture("normal");
+    it("throws an error if conventional prerelease and graduate flags are both passed",
+       async () => {
+         const testDir = await initFixture("normal");
 
-      try {
-        await lernaVersion(testDir)("--conventional-prerelease", "--conventional-graduate");
-      } catch (err) {
-        expect(err.message).toMatchInlineSnapshot(
-          `"--conventional-prerelease cannot be combined with --conventional-graduate."`
-        );
-      }
+         try {
+           await lernaVersion(testDir)("--conventional-prerelease",
+                                       "--conventional-graduate");
+         } catch (err) {
+           expect(err.message)
+               .toMatchInlineSnapshot(
+                   `"--conventional-prerelease cannot be combined with --conventional-graduate."`);
+         }
 
-      expect.assertions(1);
-    });
+         expect.assertions(1);
+       });
 
     it("throws an error when remote branch doesn't exist", async () => {
       remoteBranchExists.mockReturnValueOnce(false);
@@ -115,9 +116,8 @@ describe("VersionCommand", () => {
     });
 
     it("throws an error when uncommitted changes are present", async () => {
-      checkWorkingTree.mockImplementationOnce(() => {
-        throw new Error("uncommitted");
-      });
+      checkWorkingTree.mockImplementationOnce(
+          () => { throw new Error("uncommitted"); });
 
       const testDir = await initFixture("normal");
 
@@ -132,9 +132,8 @@ describe("VersionCommand", () => {
     });
 
     it("throws an error when current ref is already tagged", async () => {
-      checkWorkingTree.mockImplementationOnce(() => {
-        throw new Error("released");
-      });
+      checkWorkingTree.mockImplementationOnce(
+          () => { throw new Error("released"); });
 
       const testDir = await initFixture("normal");
 
@@ -148,25 +147,27 @@ describe("VersionCommand", () => {
       expect.assertions(1);
     });
 
-    it("calls `checkWorkingTree.throwIfUncommitted` when using --force-publish", async () => {
-      const testDir = await initFixture("normal");
+    it("calls `checkWorkingTree.throwIfUncommitted` when using --force-publish",
+       async () => {
+         const testDir = await initFixture("normal");
 
-      await lernaVersion(testDir)("--force-publish");
+         await lernaVersion(testDir)("--force-publish");
 
-      expect(checkWorkingTree.throwIfUncommitted).toHaveBeenCalled();
-    });
+         expect(checkWorkingTree.throwIfUncommitted).toHaveBeenCalled();
+       });
 
-    it("only bumps changed packages when non-major version selected", async () => {
-      const testDir = await initFixture("normal");
+    it("only bumps changed packages when non-major version selected",
+       async () => {
+         const testDir = await initFixture("normal");
 
-      collectUpdates.setUpdated(testDir, "package-3");
-      PromptUtilities.mockChoices("minor");
+         collectUpdates.setUpdated(testDir, "package-3");
+         PromptUtilities.mockChoices("minor");
 
-      await lernaVersion(testDir)();
+         await lernaVersion(testDir)();
 
-      const patch = await showCommit(testDir);
-      expect(patch).toMatchSnapshot();
-    });
+         const patch = await showCommit(testDir);
+         expect(patch).toMatchSnapshot();
+       });
 
     it("bumps all packages when major version selected", async () => {
       const testDir = await initFixture("normal");
@@ -187,7 +188,8 @@ describe("VersionCommand", () => {
       PromptUtilities.mockChoices("patch", "minor", "major", "minor", "patch");
 
       const testDir = await initFixture("independent");
-      await lernaVersion(testDir)(); // --independent is only valid in InitCommand
+      await lernaVersion(
+          testDir)(); // --independent is only valid in InitCommand
 
       expect(PromptUtilities.confirm).toHaveBeenCalled();
 
@@ -196,20 +198,18 @@ describe("VersionCommand", () => {
       const patch = await showCommit(testDir);
       expect(patch).toMatchSnapshot("commit");
 
-      expect(libPush).toHaveBeenLastCalledWith(
-        "origin",
-        "master",
-        expect.objectContaining({
-          cwd: testDir,
-        })
-      );
+      expect(libPush).toHaveBeenLastCalledWith("origin", "master",
+                                               expect.objectContaining({
+                                                 cwd : testDir,
+                                               }));
       expect(output.logged()).toMatchSnapshot("console output");
     });
   });
 
   describe("--no-commit-hooks", () => {
     const setupPreCommitHook = cwd =>
-      fs.outputFile(path.join(cwd, ".git/hooks/pre-commit"), "#!/bin/sh\nexit 1\n", { mode: 0o755 });
+        fs.outputFile(path.join(cwd, ".git/hooks/pre-commit"),
+                      "#!/bin/sh\nexit 1\n", {mode : 0o755});
 
     it("passes --no-verify to git commit execution", async () => {
       const cwd = await initFixture("normal");
@@ -226,10 +226,10 @@ describe("VersionCommand", () => {
 
       await setupPreCommitHook(cwd);
       await fs.outputJSON(path.join(cwd, "lerna.json"), {
-        version: "1.0.0",
-        command: {
-          publish: {
-            commitHooks: false,
+        version : "1.0.0",
+        command : {
+          publish : {
+            commitHooks : false,
           },
         },
       });
@@ -267,10 +267,10 @@ describe("VersionCommand", () => {
       const testDir = await initFixture("normal");
 
       await fs.outputJSON(path.join(testDir, "lerna.json"), {
-        version: "1.0.0",
-        command: {
-          publish: {
-            gitTagVersion: false,
+        version : "1.0.0",
+        command : {
+          publish : {
+            gitTagVersion : false,
           },
         },
       });
@@ -286,18 +286,23 @@ describe("VersionCommand", () => {
 
       const logMessages = loggingOutput();
       expect(logMessages).toContain("Skipping git tag/commit");
-      expect(logMessages).toContain("--skip-git has been replaced by --no-git-tag-version --no-push");
+      expect(logMessages)
+          .toContain(
+              "--skip-git has been replaced by --no-git-tag-version --no-push");
     });
 
     it("skips dirty working tree validation", async () => {
       const testDir = await initFixture("normal");
-      await fs.outputFile(path.join(testDir, "packages/package-1/hello.js"), "world");
+      await fs.outputFile(path.join(testDir, "packages/package-1/hello.js"),
+                          "world");
       await lernaVersion(testDir)("--no-git-tag-version");
 
       expect(checkWorkingTree).not.toHaveBeenCalled();
 
       const logMessages = loggingOutput("warn");
-      expect(logMessages).toContain("Skipping working tree validation, proceed at your own risk");
+      expect(logMessages)
+          .toContain(
+              "Skipping working tree validation, proceed at your own risk");
 
       const unstaged = await listDirty(testDir);
       expect(unstaged).toContain("packages/package-1/hello.js");
@@ -325,10 +330,10 @@ describe("VersionCommand", () => {
       const testDir = await initFixture("normal");
 
       await fs.outputJSON(path.join(testDir, "lerna.json"), {
-        version: "1.0.0",
-        command: {
-          publish: {
-            push: false,
+        version : "1.0.0",
+        command : {
+          publish : {
+            push : false,
           },
         },
       });
@@ -344,7 +349,9 @@ describe("VersionCommand", () => {
 
       const logMessages = loggingOutput();
       expect(logMessages).toContain("Skipping git push");
-      expect(logMessages).toContain("--skip-git has been replaced by --no-git-tag-version --no-push");
+      expect(logMessages)
+          .toContain(
+              "--skip-git has been replaced by --no-git-tag-version --no-push");
     });
   });
 
@@ -361,10 +368,10 @@ describe("VersionCommand", () => {
       const testDir = await initFixture("normal");
 
       await fs.outputJSON(path.join(testDir, "lerna.json"), {
-        version: "1.0.0",
-        command: {
-          publish: {
-            tagVersionPrefix: "durable",
+        version : "1.0.0",
+        command : {
+          publish : {
+            tagVersionPrefix : "durable",
           },
         },
       });
@@ -397,13 +404,14 @@ describe("VersionCommand", () => {
   });
 
   describe("--exact", () => {
-    it("updates matching local dependencies of published packages with exact versions", async () => {
-      const testDir = await initFixture("normal");
-      await lernaVersion(testDir)("--exact");
+    it("updates matching local dependencies of published packages with exact versions",
+       async () => {
+         const testDir = await initFixture("normal");
+         await lernaVersion(testDir)("--exact");
 
-      const patch = await showCommit(testDir);
-      expect(patch).toMatchSnapshot();
-    });
+         const patch = await showCommit(testDir);
+         expect(patch).toMatchSnapshot();
+       });
 
     it("updates existing exact versions", async () => {
       const testDir = await initFixture("normal-exact");
@@ -419,35 +427,29 @@ describe("VersionCommand", () => {
       const testDir = await initFixture("normal");
       await lernaVersion(testDir)("--git-remote", "upstream");
 
-      expect(libPush).toHaveBeenLastCalledWith(
-        "upstream",
-        "master",
-        expect.objectContaining({
-          cwd: testDir,
-        })
-      );
+      expect(libPush).toHaveBeenLastCalledWith("upstream", "master",
+                                               expect.objectContaining({
+                                                 cwd : testDir,
+                                               }));
     });
 
     it("consumes configuration from lerna.json", async () => {
       const testDir = await initFixture("normal");
 
       await fs.outputJSON(path.join(testDir, "lerna.json"), {
-        version: "1.0.0",
-        command: {
-          publish: {
-            gitRemote: "durable",
+        version : "1.0.0",
+        command : {
+          publish : {
+            gitRemote : "durable",
           },
         },
       });
       await lernaVersion(testDir)();
 
-      expect(libPush).toHaveBeenLastCalledWith(
-        "durable",
-        "master",
-        expect.objectContaining({
-          cwd: testDir,
-        })
-      );
+      expect(libPush).toHaveBeenLastCalledWith("durable", "master",
+                                               expect.objectContaining({
+                                                 cwd : testDir,
+                                               }));
     });
   });
 
@@ -515,22 +517,25 @@ describe("VersionCommand", () => {
         await lernaVersion(testDir)();
       } catch (err) {
         expect(err.prefix).toBe("ENOVERSION");
-        expect(err.message).toMatch("A version field is required in package-3's package.json file.");
+        expect(err.message)
+            .toMatch(
+                "A version field is required in package-3's package.json file.");
       }
     });
 
     it("ignores private packages with no version", async () => {
       const testDir = await initFixture("not-versioned-private");
       await lernaVersion(testDir)();
-      expect(Object.keys(writePkg.updatedVersions())).not.toContain("package-4");
+      expect(Object.keys(writePkg.updatedVersions()))
+          .not.toContain("package-4");
     });
   });
 
   describe("working on a detached HEAD", () => {
     const detachedHEAD = async (fixture = "normal") => {
       const cwd = await initFixture(fixture);
-      const sha = await execa.stdout("git", ["rev-parse", "HEAD"], { cwd });
-      await execa("git", ["checkout", sha], { cwd });
+      const sha = await execa.stdout("git", [ "rev-parse", "HEAD" ], {cwd});
+      await execa("git", [ "checkout", sha ], {cwd});
       return cwd;
     };
 
@@ -540,7 +545,9 @@ describe("VersionCommand", () => {
         await lernaVersion(cwd)();
       } catch (err) {
         expect(err.prefix).toBe("ENOGIT");
-        expect(err.message).toBe("Detached git HEAD, please checkout a branch to choose versions.");
+        expect(err.message)
+            .toBe(
+                "Detached git HEAD, please checkout a branch to choose versions.");
       }
 
       expect.assertions(2);
@@ -563,10 +570,13 @@ describe("VersionCommand", () => {
     it("throws for version --conventional-commits", async () => {
       try {
         const cwd = await detachedHEAD();
-        await lernaVersion(cwd)("--no-git-tag-version", "--conventional-commits");
+        await lernaVersion(cwd)("--no-git-tag-version",
+                                "--conventional-commits");
       } catch (err) {
         expect(err.prefix).toBe("ENOGIT");
-        expect(err.message).toBe("Detached git HEAD, please checkout a branch to choose versions.");
+        expect(err.message)
+            .toBe(
+                "Detached git HEAD, please checkout a branch to choose versions.");
       }
 
       expect.assertions(2);
@@ -575,10 +585,13 @@ describe("VersionCommand", () => {
     it("throws for version --allow-branch", async () => {
       try {
         const cwd = await detachedHEAD();
-        await lernaVersion(cwd)("--no-git-tag-version", "--allow-branch", "master");
+        await lernaVersion(cwd)("--no-git-tag-version", "--allow-branch",
+                                "master");
       } catch (err) {
         expect(err.prefix).toBe("ENOGIT");
-        expect(err.message).toBe("Detached git HEAD, please checkout a branch to choose versions.");
+        expect(err.message)
+            .toBe(
+                "Detached git HEAD, please checkout a branch to choose versions.");
       }
 
       expect.assertions(2);
@@ -595,9 +608,9 @@ describe("VersionCommand", () => {
       await lernaVersion(testDir)();
     } catch (err) {
       expect(err.prefix).toBe("ENOCOMMIT");
-      expect(err.message).toBe(
-        "No commits in this repository. Please commit something before using version."
-      );
+      expect(err.message)
+          .toBe(
+              "No commits in this repository. Please commit something before using version.");
     }
   });
 
@@ -605,13 +618,15 @@ describe("VersionCommand", () => {
     const cwd = await initFixture("no-interdependencies");
 
     try {
-      const sha = await execa.stdout("git", ["rev-parse", "HEAD"], { cwd });
-      await execa("git", ["checkout", sha], { cwd }); // detach head
+      const sha = await execa.stdout("git", [ "rev-parse", "HEAD" ], {cwd});
+      await execa("git", [ "checkout", sha ], {cwd}); // detach head
 
       await lernaVersion(cwd)();
     } catch (err) {
       expect(err.prefix).toBe("ENOGIT");
-      expect(err.message).toBe("Detached git HEAD, please checkout a branch to choose versions.");
+      expect(err.message)
+          .toBe(
+              "Detached git HEAD, please checkout a branch to choose versions.");
     }
   });
 
@@ -630,7 +645,8 @@ describe("VersionCommand", () => {
     const testDir = await initFixture("snake-graph");
 
     await gitTag(testDir, "v1.0.0");
-    await fs.outputFile(path.join(testDir, "packages/package-1/hello.js"), "world");
+    await fs.outputFile(path.join(testDir, "packages/package-1/hello.js"),
+                        "world");
     await gitAdd(testDir, ".");
     await gitCommit(testDir, "feat: hello");
 
@@ -647,9 +663,9 @@ describe("VersionCommand", () => {
 
     await gitTag(testDir, "v1.0.0");
 
-    await Promise.all(
-      ["a", "b", "c", "d"].map(n => fs.outputFile(path.join(testDir, "packages", n, "index.js"), "hello"))
-    );
+    await Promise.all([ "a", "b", "c", "d" ].map(
+        n => fs.outputFile(path.join(testDir, "packages", n, "index.js"),
+                           "hello")));
     await gitAdd(testDir, ".");
     await gitCommit(testDir, "feat: hello");
 
@@ -674,7 +690,8 @@ describe("VersionCommand", () => {
   describe("with relative file: specifiers", () => {
     const setupChanges = async (cwd, pkgRoot = "packages") => {
       await gitTag(cwd, "v1.0.0");
-      await fs.outputFile(path.join(cwd, `${pkgRoot}/package-1/hello.js`), "world");
+      await fs.outputFile(path.join(cwd, `${pkgRoot}/package-1/hello.js`),
+                          "world");
       await gitAdd(cwd, ".");
       await gitCommit(cwd, "setup");
     };
@@ -686,28 +703,29 @@ describe("VersionCommand", () => {
       await lernaVersion(testDir)("major", "--yes");
 
       expect(writePkg.updatedVersions()).toEqual({
-        "package-1": "2.0.0",
-        "package-2": "2.0.0",
-        "package-3": "2.0.0",
-        "package-4": "2.0.0",
-        "package-5": "2.0.0",
-        "package-6": "2.0.0",
-        "package-7": "2.0.0",
+        "package-1" : "2.0.0",
+        "package-2" : "2.0.0",
+        "package-3" : "2.0.0",
+        "package-4" : "2.0.0",
+        "package-5" : "2.0.0",
+        "package-6" : "2.0.0",
+        "package-7" : "2.0.0",
       });
 
       // package-1 has no relative file: dependencies
       expect(writePkg.updatedManifest("package-2").dependencies).toMatchObject({
-        "package-1": "file:../package-1",
+        "package-1" : "file:../package-1",
       });
       expect(writePkg.updatedManifest("package-3").dependencies).toMatchObject({
-        "package-2": "file:../package-2",
+        "package-2" : "file:../package-2",
       });
-      expect(writePkg.updatedManifest("package-4").optionalDependencies).toMatchObject({
-        "package-3": "file:../package-3",
-      });
+      expect(writePkg.updatedManifest("package-4").optionalDependencies)
+          .toMatchObject({
+            "package-3" : "file:../package-3",
+          });
       expect(writePkg.updatedManifest("package-5").dependencies).toMatchObject({
-        "package-4": "file:../package-4",
-        "package-6": "file:../package-6",
+        "package-4" : "file:../package-4",
+        "package-6" : "file:../package-6",
       });
     });
   });
