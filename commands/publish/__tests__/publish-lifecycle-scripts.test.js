@@ -21,52 +21,54 @@ const initFixture = require("@lerna-test/init-fixture")(__dirname);
 const path = require("path");
 
 // test command
-const lernaPublish =
-    require("@lerna-test/command-runner")(require("../command"));
+const lernaPublish = require("@lerna-test/command-runner")(require("../command"));
 
 describe("lifecycle scripts", () => {
   const npmLifecycleEvent = process.env.npm_lifecycle_event;
 
-  afterEach(() => { process.env.npm_lifecycle_event = npmLifecycleEvent; });
+  afterEach(() => {
+    process.env.npm_lifecycle_event = npmLifecycleEvent;
+  });
 
   it("calls publish lifecycle scripts for root and packages", async () => {
     const cwd = await initFixture("lifecycle");
 
     await lernaPublish(cwd)();
 
-    ["prepare", "prepublishOnly", "prepack", "postpack", "postpublish"].forEach(
-        script => {
-          // "lifecycle" is the root manifest name
-          expect(runLifecycle)
-              .toHaveBeenCalledWith(
-                  expect.objectContaining({name : "lifecycle"}), script,
-                  expect.any(Object));
-        });
+    ["prepare", "prepublishOnly", "prepack", "postpack", "postpublish"].forEach(script => {
+      // "lifecycle" is the root manifest name
+      expect(runLifecycle).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "lifecycle" }),
+        script,
+        expect.any(Object)
+      );
+    });
 
     // package-2 only has prepublish lifecycle
-    expect(packDirectory)
-        .toHaveBeenCalledWith(expect.objectContaining({name : "package-2"}),
-                              path.join(cwd, "packages/package-2"),
-                              expect.objectContaining({
-                                "ignore-prepublish" : false,
-                                "ignore-scripts" : false,
-                              }));
+    expect(packDirectory).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "package-2" }),
+      path.join(cwd, "packages/package-2"),
+      expect.objectContaining({
+        "ignore-prepublish": false,
+        "ignore-scripts": false,
+      })
+    );
 
     expect(runLifecycle.getOrderedCalls()).toEqual([
       // TODO: separate from VersionCommand details
-      [ "lifecycle", "preversion" ],
-      [ "package-1", "preversion" ],
-      [ "package-1", "version" ],
-      [ "lifecycle", "version" ],
-      [ "package-1", "postversion" ],
-      [ "lifecycle", "postversion" ],
+      ["lifecycle", "preversion"],
+      ["package-1", "preversion"],
+      ["package-1", "version"],
+      ["lifecycle", "version"],
+      ["package-1", "postversion"],
+      ["lifecycle", "postversion"],
       // publish-specific
-      [ "lifecycle", "prepublish" ],
-      [ "lifecycle", "prepare" ],
-      [ "lifecycle", "prepublishOnly" ],
-      [ "lifecycle", "prepack" ],
-      [ "lifecycle", "postpack" ],
-      [ "lifecycle", "postpublish" ],
+      ["lifecycle", "prepublish"],
+      ["lifecycle", "prepare"],
+      ["lifecycle", "prepublishOnly"],
+      ["lifecycle", "prepack"],
+      ["lifecycle", "postpack"],
+      ["lifecycle", "postpublish"],
     ]);
 
     expect(Array.from(loadJsonFile.registry.keys())).toStrictEqual([
@@ -84,17 +86,17 @@ describe("lifecycle scripts", () => {
 
     expect(runLifecycle.getOrderedCalls()).toEqual([
       // TODO: separate from VersionCommand details
-      [ "lifecycle", "preversion" ],
-      [ "package-1", "preversion" ],
-      [ "package-1", "version" ],
-      [ "lifecycle", "version" ],
-      [ "package-1", "postversion" ],
-      [ "lifecycle", "postversion" ],
+      ["lifecycle", "preversion"],
+      ["package-1", "preversion"],
+      ["package-1", "version"],
+      ["lifecycle", "version"],
+      ["package-1", "postversion"],
+      ["lifecycle", "postversion"],
       // publish-specific
-      [ "lifecycle", "prepare" ],
-      [ "lifecycle", "prepublishOnly" ],
-      [ "lifecycle", "prepack" ],
-      [ "lifecycle", "postpack" ],
+      ["lifecycle", "prepare"],
+      ["lifecycle", "prepublishOnly"],
+      ["lifecycle", "prepack"],
+      ["lifecycle", "postpack"],
     ]);
   });
 
@@ -105,11 +107,12 @@ describe("lifecycle scripts", () => {
 
     expect(runLifecycle.getOrderedCalls()).toEqual([
       // TODO: separate from VersionCommand details
-      [ "package-1", "preversion" ], [ "package-1", "version" ],
-      [ "lifecycle-rooted-leaf", "preversion" ],
-      [ "lifecycle-rooted-leaf", "version" ],
-      [ "lifecycle-rooted-leaf", "postversion" ],
-      [ "package-1", "postversion" ],
+      ["package-1", "preversion"],
+      ["package-1", "version"],
+      ["lifecycle-rooted-leaf", "preversion"],
+      ["lifecycle-rooted-leaf", "version"],
+      ["lifecycle-rooted-leaf", "postversion"],
+      ["package-1", "postversion"],
       // NO publish-specific root lifecycles should be duplicated
       // (they are all run by pack-directory and npm-publish)
     ]);
@@ -120,12 +123,13 @@ describe("lifecycle scripts", () => {
 
     await lernaPublish(cwd)("--ignore-prepublish");
 
-    expect(packDirectory)
-        .toHaveBeenCalledWith(expect.objectContaining({name : "package-2"}),
-                              path.join(cwd, "packages/package-2"),
-                              expect.objectContaining({
-                                "ignore-prepublish" : true,
-                              }));
+    expect(packDirectory).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "package-2" }),
+      path.join(cwd, "packages/package-2"),
+      expect.objectContaining({
+        "ignore-prepublish": true,
+      })
+    );
 
     // runLifecycle() is _called_ with "prepublish" for root,
     // but it does not actually execute, and is tested elsewhere
@@ -139,16 +143,19 @@ describe("lifecycle scripts", () => {
     // despite all the scripts being passed to runLifecycle() (and implicitly,
     // packDirectory()), none of them will actually execute as long as
     // opts["ignore-scripts"] is provided
-    expect(runLifecycle)
-        .toHaveBeenCalledWith(expect.objectContaining({name : "lifecycle"}),
-                              "prepare", expect.objectContaining({
-                                "ignore-scripts" : true,
-                              }));
-    expect(packDirectory)
-        .toHaveBeenCalledWith(expect.objectContaining({name : "package-2"}),
-                              path.join(cwd, "packages/package-2"),
-                              expect.objectContaining({
-                                "ignore-scripts" : true,
-                              }));
+    expect(runLifecycle).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "lifecycle" }),
+      "prepare",
+      expect.objectContaining({
+        "ignore-scripts": true,
+      })
+    );
+    expect(packDirectory).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "package-2" }),
+      path.join(cwd, "packages/package-2"),
+      expect.objectContaining({
+        "ignore-scripts": true,
+      })
+    );
   });
 });

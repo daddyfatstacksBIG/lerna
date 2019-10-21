@@ -12,23 +12,19 @@ jest.mock("../lib/remote-branch-exists");
 // mocked modules
 const githubClient = require("@lerna/github-client").client;
 const gitlabClient = require("@lerna/gitlab-client")();
-const {recommendVersion} = require("@lerna/conventional-commits");
+const { recommendVersion } = require("@lerna/conventional-commits");
 
 // helpers
 const initFixture = require("@lerna-test/init-fixture")(__dirname);
 
 // test command
-const lernaVersion =
-    require("@lerna-test/command-runner")(require("../command"));
+const lernaVersion = require("@lerna-test/command-runner")(require("../command"));
 
-describe.each(
-    [ [ "github", githubClient ],
-      [ "gitlab", gitlabClient ] ])("--create-release %s", (type, client) => {
+describe.each([["github", githubClient], ["gitlab", gitlabClient]])("--create-release %s", (type, client) => {
   it("does not create a release if --no-push is passed", async () => {
     const cwd = await initFixture("independent");
 
-    await lernaVersion(cwd)("--create-release", type, "--conventional-commits",
-                            "--no-push");
+    await lernaVersion(cwd)("--create-release", type, "--conventional-commits", "--no-push");
 
     expect(client.repos.createRelease).not.toHaveBeenCalled();
   });
@@ -39,8 +35,7 @@ describe.each(
     try {
       await lernaVersion(cwd)("--create-release", type);
     } catch (err) {
-      expect(err.message)
-          .toBe("To create a release, you must enable --conventional-commits");
+      expect(err.message).toBe("To create a release, you must enable --conventional-commits");
       expect(client.repos.createRelease).not.toHaveBeenCalled();
     }
 
@@ -51,46 +46,42 @@ describe.each(
     const cwd = await initFixture("independent");
 
     try {
-      await lernaVersion(cwd)("--create-release", type,
-                              "--conventional-commits", "--no-changelog");
+      await lernaVersion(cwd)("--create-release", type, "--conventional-commits", "--no-changelog");
     } catch (err) {
-      expect(err.message)
-          .toBe("To create a release, you cannot pass --no-changelog");
+      expect(err.message).toBe("To create a release, you cannot pass --no-changelog");
       expect(client.repos.createRelease).not.toHaveBeenCalled();
     }
 
     expect.hasAssertions();
   });
 
-  it("marks a version as a pre-release if it contains a valid part",
-     async () => {
-       const cwd = await initFixture("normal");
+  it("marks a version as a pre-release if it contains a valid part", async () => {
+    const cwd = await initFixture("normal");
 
-       recommendVersion.mockResolvedValueOnce("2.0.0-alpha.1");
+    recommendVersion.mockResolvedValueOnce("2.0.0-alpha.1");
 
-       await lernaVersion(cwd)("--create-release", type,
-                               "--conventional-commits");
+    await lernaVersion(cwd)("--create-release", type, "--conventional-commits");
 
-       expect(client.repos.createRelease).toHaveBeenCalledTimes(1);
-       expect(client.repos.createRelease).toHaveBeenCalledWith({
-         owner : "lerna",
-         repo : "lerna",
-         tag_name : "v2.0.0-alpha.1",
-         name : "v2.0.0-alpha.1",
-         body : "normal",
-         draft : false,
-         prerelease : true,
-       });
-     });
+    expect(client.repos.createRelease).toHaveBeenCalledTimes(1);
+    expect(client.repos.createRelease).toHaveBeenCalledWith({
+      owner: "lerna",
+      repo: "lerna",
+      tag_name: "v2.0.0-alpha.1",
+      name: "v2.0.0-alpha.1",
+      body: "normal",
+      draft: false,
+      prerelease: true,
+    });
+  });
 
   it("creates a release for every independent version", async () => {
     const cwd = await initFixture("independent");
     const versionBumps = new Map([
-      [ "package-1", "1.0.1" ],
-      [ "package-2", "2.1.0" ],
-      [ "package-3", "4.0.0" ],
-      [ "package-4", "4.1.0" ],
-      [ "package-5", "5.0.1" ],
+      ["package-1", "1.0.1"],
+      ["package-2", "2.1.0"],
+      ["package-3", "4.0.0"],
+      ["package-4", "4.1.0"],
+      ["package-5", "5.0.1"],
     ]);
 
     versionBumps.forEach(bump => recommendVersion.mockResolvedValueOnce(bump));
@@ -100,13 +91,13 @@ describe.each(
     expect(client.repos.createRelease).toHaveBeenCalledTimes(5);
     versionBumps.forEach((version, name) => {
       expect(client.repos.createRelease).toHaveBeenCalledWith({
-        owner : "lerna",
-        repo : "lerna",
-        tag_name : `${name}@${version}`,
-        name : `${name}@${version}`,
-        body : `${name} - ${version}`,
-        draft : false,
-        prerelease : false,
+        owner: "lerna",
+        repo: "lerna",
+        tag_name: `${name}@${version}`,
+        name: `${name}@${version}`,
+        body: `${name} - ${version}`,
+        draft: false,
+        prerelease: false,
       });
     });
   });
@@ -120,13 +111,13 @@ describe.each(
 
     expect(client.repos.createRelease).toHaveBeenCalledTimes(1);
     expect(client.repos.createRelease).toHaveBeenCalledWith({
-      owner : "lerna",
-      repo : "lerna",
-      tag_name : "v1.1.0",
-      name : "v1.1.0",
-      body : "normal",
-      draft : false,
-      prerelease : false,
+      owner: "lerna",
+      repo: "lerna",
+      tag_name: "v1.1.0",
+      name: "v1.1.0",
+      body: "normal",
+      draft: false,
+      prerelease: false,
     });
   });
 });
@@ -146,8 +137,7 @@ describe("--create-release [unrecognized]", () => {
     const cwd = await initFixture("normal");
 
     try {
-      await lernaVersion(cwd)("--conventional-commits", "--create-release",
-                              "poopypants");
+      await lernaVersion(cwd)("--conventional-commits", "--create-release", "poopypants");
     } catch (err) {
       expect(err.message).toMatch("Invalid values");
       expect(err.message).toMatch("create-release");
