@@ -2,7 +2,8 @@
 
 > Run an npm script in each package that contains that script
 
-Install [lerna](https://www.npmjs.com/package/lerna) for access to the `lerna` CLI.
+Install [lerna](https://www.npmjs.com/package/lerna) for access to the `lerna`
+CLI.
 
 ## Usage
 
@@ -15,11 +16,14 @@ $ lerna run build
 $ lerna run --parallel watch
 ```
 
-Run an [npm script](https://docs.npmjs.com/misc/scripts) in each package that contains that script. A double-dash (`--`) is necessary to pass dashed arguments to the script execution.
+Run an [npm script](https://docs.npmjs.com/misc/scripts) in each package that
+contains that script. A double-dash (`--`) is necessary to pass dashed arguments
+to the script execution.
 
 ## Options
 
-`lerna run` accepts all [filter flags](https://www.npmjs.com/package/@lerna/filter-options).
+`lerna run` accepts all
+[filter flags](https://www.npmjs.com/package/@lerna/filter-options).
 
 ```sh
 $ lerna run --scope my-component test
@@ -27,8 +31,8 @@ $ lerna run --scope my-component test
 
 ### `--npm-client <client>`
 
-Must be an executable that knows how to run npm lifecycle scripts.
-The default `--npm-client` is `npm`.
+Must be an executable that knows how to run npm lifecycle scripts. The default
+`--npm-client` is `npm`.
 
 ```sh
 $ lerna run build --npm-client=yarn
@@ -57,16 +61,18 @@ $ lerna run watch --stream
 
 ### `--parallel`
 
-Similar to `--stream`, but completely disregards concurrency and topological sorting, running a given command or script immediately in all matching packages with prefixed streaming output. This is the preferred flag for long-running processes such as `npm run watch` run over many packages.
+Similar to `--stream`, but completely disregards concurrency and topological
+sorting, running a given command or script immediately in all matching packages
+with prefixed streaming output. This is the preferred flag for long-running
+processes such as `npm run watch` run over many packages.
 
 ```sh
 $ lerna run watch --parallel
 ```
 
-> **Note:** It is advised to constrain the scope of this command when using
-> the `--parallel` flag, as spawning dozens of subprocesses may be
-> harmful to your shell's equanimity (or maximum file descriptor limit,
-> for example). YMMV
+> **Note:** It is advised to constrain the scope of this command when using the
+> `--parallel` flag, as spawning dozens of subprocesses may be harmful to your
+> shell's equanimity (or maximum file descriptor limit, for example). YMMV
 
 ### `--no-bail`
 
@@ -75,10 +81,12 @@ $ lerna run watch --parallel
 $ lerna run --no-bail test
 ```
 
-By default, `lerna run` will exit with an error if _any_ script run returns a non-zero exit code.
-Pass `--no-bail` to disable this behavior, running the script in _all_ packages that contain it regardless of exit code.
+By default, `lerna run` will exit with an error if _any_ script run returns a
+non-zero exit code. Pass `--no-bail` to disable this behavior, running the
+script in _all_ packages that contain it regardless of exit code.
 
 ### `--no-prefix`
 
-Disable package name prefixing when output is streaming (`--stream` _or_ `--parallel`).
-This option can be useful when piping results to other processes, such as editor plugins.
+Disable package name prefixing when output is streaming (`--stream` _or_
+`--parallel`). This option can be useful when piping results to other processes,
+such as editor plugins.
