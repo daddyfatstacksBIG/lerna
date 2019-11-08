@@ -10,15 +10,15 @@ const loggingOutput = require("@lerna-test/logging-output");
 const updateLernaConfig = require("@lerna-test/update-lerna-config");
 
 // file under test
-const lernaChanged = require("@lerna-test/command-runner")(require("../command"));
+const lernaChanged =
+    require("@lerna-test/command-runner")(require("../command"));
 
 // remove quotes around top-level strings
 expect.addSnapshotSerializer({
-  test(val) {
-    return typeof val === "string";
-  },
+  test(val) { return typeof val === "string"; },
   serialize(val, config, indentation, depth) {
-    // top-level strings don't need quotes, but nested ones do (object properties, etc)
+    // top-level strings don't need quotes, but nested ones do (object
+    // properties, etc)
     return depth ? `"${val}"` : val;
   },
 });
@@ -29,9 +29,7 @@ expect.addSnapshotSerializer(require("@lerna-test/serialize-tempdir"));
 describe("ChangedCommand", () => {
   let cwd;
 
-  beforeAll(async () => {
-    cwd = await initFixture("normal");
-  });
+  beforeAll(async () => { cwd = await initFixture("normal"); });
 
   it("lists changed packages", async () => {
     collectUpdates.setUpdated(cwd, "package-2", "package-3");
@@ -53,72 +51,71 @@ package-2
 package-3
 package-4
 `);
-    expect(collectUpdates).toHaveBeenLastCalledWith(
-      expect.any(Array),
-      expect.any(Object),
-      expect.objectContaining({ cwd }),
-      expect.objectContaining({ forcePublish: true })
-    );
+    expect(collectUpdates)
+        .toHaveBeenLastCalledWith(
+            expect.any(Array), expect.any(Object),
+            expect.objectContaining({cwd}),
+            expect.objectContaining({forcePublish : true}));
   });
 
   it("passes --ignore-changes to update collector", async () => {
     await lernaChanged(cwd)("--ignore-changes", "**/cli-ignore");
 
-    expect(collectUpdates).toHaveBeenLastCalledWith(
-      expect.any(Array),
-      expect.any(Object),
-      expect.objectContaining({ cwd }),
-      expect.objectContaining({ ignoreChanges: ["**/cli-ignore"] })
-    );
+    expect(collectUpdates)
+        .toHaveBeenLastCalledWith(
+            expect.any(Array), expect.any(Object),
+            expect.objectContaining({cwd}),
+            expect.objectContaining({ignoreChanges : [ "**/cli-ignore" ]}));
   });
 
   it("reads durable ignoreChanges config from version namespace", async () => {
     await updateLernaConfig(cwd, {
-      command: {
-        version: {
-          ignoreChanges: ["**/durable-ignore"],
+      command : {
+        version : {
+          ignoreChanges : [ "**/durable-ignore" ],
         },
       },
     });
 
     await lernaChanged(cwd)();
 
-    expect(collectUpdates).toHaveBeenLastCalledWith(
-      expect.any(Array),
-      expect.any(Object),
-      expect.objectContaining({ cwd }),
-      expect.objectContaining({ ignoreChanges: ["**/durable-ignore"] })
-    );
+    expect(collectUpdates)
+        .toHaveBeenLastCalledWith(
+            expect.any(Array), expect.any(Object),
+            expect.objectContaining({cwd}),
+            expect.objectContaining({ignoreChanges : [ "**/durable-ignore" ]}));
   });
 
   it("passes --include-merged-tags to update collector", async () => {
     await lernaChanged(cwd)("--include-merged-tags");
 
-    expect(collectUpdates).toHaveBeenLastCalledWith(
-      expect.any(Array),
-      expect.any(Object),
-      expect.objectContaining({ cwd }),
-      expect.objectContaining({ includeMergedTags: true })
-    );
+    expect(collectUpdates)
+        .toHaveBeenLastCalledWith(
+            expect.any(Array), expect.any(Object),
+            expect.objectContaining({cwd}),
+            expect.objectContaining({includeMergedTags : true}));
   });
 
   it("passes --conventional-graduate to update collector", async () => {
     await lernaChanged(cwd)("--conventional-graduate=*");
 
-    expect(collectUpdates).toHaveBeenLastCalledWith(
-      expect.any(Array),
-      expect.any(Object),
-      expect.objectContaining({ cwd }),
-      expect.objectContaining({ conventionalGraduate: "*", conventionalCommits: true })
-    );
+    expect(collectUpdates)
+        .toHaveBeenLastCalledWith(
+            expect.any(Array), expect.any(Object),
+            expect.objectContaining({cwd}),
+            expect.objectContaining(
+                {conventionalGraduate : "*", conventionalCommits : true}));
   });
 
-  it("warns when --force-publish superseded by --conventional-graduate", async () => {
-    await lernaChanged(cwd)("--conventional-graduate", "foo", "--force-publish", "bar");
+  it("warns when --force-publish superseded by --conventional-graduate",
+     async () => {
+       await lernaChanged(cwd)("--conventional-graduate", "foo",
+                               "--force-publish", "bar");
 
-    const [logMessage] = loggingOutput("warn");
-    expect(logMessage).toBe("--force-publish superseded by --conventional-graduate");
-  });
+       const [logMessage] = loggingOutput("warn");
+       expect(logMessage)
+           .toBe("--force-publish superseded by --conventional-graduate");
+     });
 
   it("lists changed private packages with --all", async () => {
     collectUpdates.setUpdated(cwd, "package-5");
