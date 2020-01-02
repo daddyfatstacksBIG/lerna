@@ -27,7 +27,8 @@ const gitTag = require("@lerna-test/git-tag");
 const initFixture = require("@lerna-test/init-fixture")(__dirname);
 
 // file under test
-const lernaPublish = require("@lerna-test/command-runner")(require("../command"));
+const lernaPublish =
+    require("@lerna-test/command-runner")(require("../command"));
 
 expect.extend(require("@lerna-test/figgy-pudding-matchers"));
 
@@ -41,15 +42,12 @@ describe("publish from-git", () => {
     // called from chained describeRef()
     expect(checkWorkingTree.throwIfUncommitted).toHaveBeenCalled();
 
-    expect(PromptUtilities.confirm).toHaveBeenLastCalledWith(
-      "Are you sure you want to publish these packages?"
-    );
+    expect(PromptUtilities.confirm)
+        .toHaveBeenLastCalledWith(
+            "Are you sure you want to publish these packages?");
     expect(output.logged()).toMatch("Found 4 packages to publish:");
     expect(npmPublish.order()).toEqual([
-      "package-1",
-      "package-3",
-      "package-4",
-      "package-2",
+      "package-1", "package-3", "package-4", "package-2",
       // package-5 is private
     ]);
   });
@@ -67,10 +65,7 @@ describe("publish from-git", () => {
     await lernaPublish(cwd)("from-git");
 
     expect(npmPublish.order()).toEqual([
-      "package-1",
-      "package-3",
-      "package-4",
-      "package-2",
+      "package-1", "package-3", "package-4", "package-2",
       // package-5 is private
     ]);
   });
@@ -82,10 +77,7 @@ describe("publish from-git", () => {
     await lernaPublish(cwd)("from-git", "--tag-version-prefix", "foo/");
 
     expect(npmPublish.order()).toEqual([
-      "package-1",
-      "package-3",
-      "package-4",
-      "package-2",
+      "package-1", "package-3", "package-4", "package-2",
       // package-5 is private
     ]);
   });
@@ -97,7 +89,7 @@ describe("publish from-git", () => {
     await lernaPublish(cwd)("from-git");
 
     expect(output.logged()).toMatch("Found 1 package to publish:");
-    expect(npmPublish.order()).toEqual(["package-3"]);
+    expect(npmPublish.order()).toEqual([ "package-3" ]);
   });
 
   it("exits early when the current commit is not tagged", async () => {
@@ -112,9 +104,8 @@ describe("publish from-git", () => {
   });
 
   it("throws an error when uncommitted changes are present", async () => {
-    checkWorkingTree.throwIfUncommitted.mockImplementationOnce(() => {
-      throw new Error("uncommitted");
-    });
+    checkWorkingTree.throwIfUncommitted.mockImplementationOnce(
+        () => { throw new Error("uncommitted"); });
 
     const cwd = await initFixture("normal");
     const command = lernaPublish(cwd)("from-git");
@@ -127,10 +118,8 @@ describe("publish from-git", () => {
     const cwd = await initFixture("normal");
     const command = lernaPublish(cwd)("from-git", "--git-head", "deadbeef");
 
-    await expect(command).rejects.toThrow(
-      expect.objectContaining({
-        prefix: "EGITHEAD",
-      })
-    );
+    await expect(command).rejects.toThrow(expect.objectContaining({
+      prefix : "EGITHEAD",
+    }));
   });
 });
