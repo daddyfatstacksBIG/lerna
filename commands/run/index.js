@@ -5,6 +5,7 @@ const pMap = require("p-map");
 const Command = require("@lerna/command");
 const npmRunScript = require("@lerna/npm-run-script");
 const output = require("@lerna/output");
+const Profiler = require("@lerna/profiler");
 const timer = require("@lerna/timer");
 const runTopologically = require("@lerna/run-topologically");
 const ValidationError = require("@lerna/validation-error");
@@ -117,7 +118,8 @@ class RunCommand extends Command {
   }
 
   getOpts(pkg) {
-    // these options are NOT passed directly to execa, they are composed in npm-run-script
+    // these options are NOT passed directly to execa, they are composed in
+    // npm-run-script
     return {
       args: this.args,
       npmClient: this.npmClient,
@@ -127,15 +129,39 @@ class RunCommand extends Command {
     };
   }
 
-  runScriptInPackagesTopological() {
-    const runner = this.options.stream
+  getRunner() {
+    return this.options.stream
       ? pkg => this.runScriptInPackageStreaming(pkg)
       : pkg => this.runScriptInPackageCapturing(pkg);
+  }
 
-    return runTopologically(this.packagesWithScript, runner, {
+  runScriptInPackagesTopological() {
+    let profiler;
+    let runner;
+
+    if (this.options.profile) {
+      profiler = new Profiler({
+        concurrency: this.concurrency,
+        log: this.logger,
+        outputDirectory: this.options.profileLocation,
+      });
+
+      const callback = this.getRunner();
+      runner = pkg => profiler.run(() => callback(pkg), pkg.name);
+    } else {
+      runner = this.getRunner();
+    }
+
+    let chain = runTopologically(this.packagesWithScript, runner, {
       concurrency: this.concurrency,
       rejectCycles: this.options.rejectCycles,
     });
+
+    if (profiler) {
+      chain = chain.then(results => profiler.output().then(() => results));
+    }
+
+    return chain;
   }
 
   runScriptInPackagesParallel() {
@@ -143,11 +169,7 @@ class RunCommand extends Command {
   }
 
   runScriptInPackagesLexical() {
-    const runner = this.options.stream
-      ? pkg => this.runScriptInPackageStreaming(pkg)
-      : pkg => this.runScriptInPackageCapturing(pkg);
-
-    return pMap(this.packagesWithScript, runner, { concurrency: this.concurrency });
+    return pMap(this.packagesWithScript, this.getRunner(), { concurrency: this.concurrency });
   }
 
   runScriptInPackageStreaming(pkg) {

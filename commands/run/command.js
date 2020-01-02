@@ -3,7 +3,8 @@
 const filterable = require("@lerna/filter-options");
 
 /**
- * @see https://github.com/yargs/yargs/blob/master/docs/advanced.md#providing-a-command-module
+ * @see
+ *     https://github.com/yargs/yargs/blob/master/docs/advanced.md#providing-a-command-module
  */
 exports.command = "run <script>";
 
@@ -47,7 +48,8 @@ exports.builder = yargs => {
         hidden: true,
         type: "boolean",
       },
-      // This option controls prefix for stream output so that it can be disabled to be friendly
+      // This option controls prefix for stream output so that it can be
+      // disabled to be friendly
       // to tools like Visual Studio Code to highlight the raw results
       "no-prefix": {
         group: "Command Options:",
@@ -58,6 +60,16 @@ exports.builder = yargs => {
         // proxy for --no-prefix
         hidden: true,
         type: "boolean",
+      },
+      profile: {
+        group: "Command Options:",
+        describe: "Profile script executions and output performance profile to default location.",
+        type: "boolean",
+      },
+      "profile-location": {
+        group: "Command Options:",
+        describe: "Output performance profile to custom location instead of default project root.",
+        type: "string",
       },
     });
 

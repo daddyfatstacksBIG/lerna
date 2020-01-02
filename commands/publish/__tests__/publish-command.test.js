@@ -129,7 +129,9 @@ Map {
 
       expect(getNpmUsername).toHaveBeenCalled();
       expect(getNpmUsername).toHaveBeenLastCalledWith(
-        expect.figgyPudding({ registry: "https://registry.npmjs.org/" })
+        expect.figgyPudding({
+          registry: "https://registry.npmjs.org/",
+        })
       );
 
       expect(verifyNpmPackageAccess).toHaveBeenCalled();
@@ -141,7 +143,8 @@ Map {
 
       expect(getTwoFactorAuthRequired).toHaveBeenCalled();
       expect(getTwoFactorAuthRequired).toHaveBeenLastCalledWith(
-        // extra insurance that @lerna/npm-conf is defaulting things correctly
+        // extra insurance that @lerna/npm-conf is defaulting things
+        // correctly
         expect.figgyPudding({ otp: undefined })
       );
     });
@@ -238,6 +241,23 @@ Map {
         expect.objectContaining({ otp: "654321" })
       );
       expect(otplease.getOneTimePassword).toHaveBeenLastCalledWith("Enter OTP:");
+    });
+  });
+
+  describe("--legacy-auth", () => {
+    it("passes auth to npm commands", async () => {
+      const testDir = await initFixture("normal");
+      const data = "hi:mom";
+      const auth = Buffer.from(data).toString("base64");
+
+      await lernaPublish(testDir)("--legacy-auth", auth);
+
+      expect(npmPublish).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "package-1" }),
+        "/TEMP_DIR/package-1-MOCKED.tgz",
+        expect.objectContaining({ "auth-type": "legacy", _auth: auth }),
+        expect.objectContaining({ otp: undefined })
+      );
     });
   });
 

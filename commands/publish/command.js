@@ -4,7 +4,8 @@ const log = require("npmlog");
 const versionCommand = require("@lerna/version/command");
 
 /**
- * @see https://github.com/yargs/yargs/blob/master/docs/advanced.md#providing-a-command-module
+ * @see
+ *     https://github.com/yargs/yargs/blob/master/docs/advanced.md#providing-a-command-module
  */
 exports.command = "publish [bump]";
 
@@ -17,7 +18,8 @@ exports.builder = yargs => {
       alias: "canary",
       type: "boolean",
     },
-    // preid is copied from ../version/command because a whitelist for one option isn't worth it
+    // preid is copied from ../version/command because a whitelist for one
+    // option isn't worth it
     preid: {
       describe: "Specify the prerelease identifier when publishing a prerelease",
       type: "string",
@@ -34,6 +36,10 @@ exports.builder = yargs => {
       describe: "Publish packages with the specified npm dist-tag",
       type: "string",
       requiresArg: true,
+    },
+    "legacy-auth": {
+      describe: "Legacy Base64 Encoded username and password.",
+      type: "string",
     },
     "pre-dist-tag": {
       describe: "Publish prerelease packages with the specified npm dist-tag",

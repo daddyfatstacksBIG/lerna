@@ -81,7 +81,8 @@ class PublishCommand extends Command {
     this.tagPrefix = tagVersionPrefix;
     // TODO: properly inherit from npm-conf
 
-    // inverted boolean options are only respected if prefixed with `--no-`, e.g. `--no-verify-access`
+    // inverted boolean options are only respected if prefixed with `--no-`,
+    // e.g. `--no-verify-access`
     this.gitReset = gitReset !== false;
     this.verifyAccess = verifyAccess !== false;
 
@@ -110,12 +111,14 @@ class PublishCommand extends Command {
       this.logger.info("require-scripts", "enabled");
     }
 
-    // npmSession and user-agent are consumed by npm-registry-fetch (via libnpmpublish)
+    // npmSession and user-agent are consumed by npm-registry-fetch (via
+    // libnpmpublish)
     this.logger.verbose("session", this.npmSession);
     this.logger.verbose("user-agent", this.userAgent);
 
     this.conf = npmConf({
       lernaCommand: "publish",
+      _auth: this.options.legacyAuth,
       npmSession: this.npmSession,
       npmVersion: this.userAgent,
       otp: this.options.otp,
@@ -143,7 +146,8 @@ class PublishCommand extends Command {
       this.conf.set("tag", distTag.trim(), "cli");
     }
 
-    // a "rooted leaf" is the regrettable pattern of adding "." to the "packages" config in lerna.json
+    // a "rooted leaf" is the regrettable pattern of adding "." to the
+    // "packages" config in lerna.json
     this.hasRootedLeaf = this.packageGraph.has(this.project.manifest.name);
 
     if (this.hasRootedLeaf) {
@@ -290,7 +294,8 @@ class PublishCommand extends Command {
     chain = chain
       .then(() => this.verifyWorkingTreeClean())
       .catch(err => {
-        // an execa error is thrown when git suffers a fatal error (such as no git repository present)
+        // an execa error is thrown when git suffers a fatal error (such as no git
+        // repository present)
         if (err.failed && /git describe/.test(err.cmd)) {
           // (we tried)
           this.logger.silly("EWORKINGTREE", err.message);
@@ -370,7 +375,8 @@ class PublishCommand extends Command {
             includeMergedTags
           )
             .then(({ lastVersion = pkg.version, refCount, sha }) =>
-              // an unpublished package will have no reachable git tag
+              // an unpublished package will have no
+              // reachable git tag
               makeVersion({ lastVersion, refCount, sha })
             )
             .then(version => [pkg.name, version])
@@ -522,7 +528,8 @@ class PublishCommand extends Command {
 
     return pMap(updatesWithLocalLinks, ({ pkg, localDependencies }) => {
       for (const [depName, resolved] of localDependencies) {
-        // regardless of where the version comes from, we can't publish "file:../sibling-pkg" specs
+        // regardless of where the version comes from, we can't publish
+        // "file:../sibling-pkg" specs
         const depVersion = this.updatesVersions.get(depName) || this.packageGraph.get(depName).pkg.version;
 
         // it no longer matters if we mutate the shared Package instance
@@ -619,10 +626,11 @@ class PublishCommand extends Command {
     return runTopologically(this.packagesToPublish, mapper, {
       concurrency: this.concurrency,
       rejectCycles: this.options.rejectCycles,
-      // By default, do not include devDependencies in the graph because it would
-      // increase the chance of dependency cycles, causing less-than-ideal order.
-      // If the user has opted-in to --graph-type=all (or "graphType": "all" in lerna.json),
-      // devDependencies _will_ be included in the graph construction.
+      // By default, do not include devDependencies in the graph because it
+      // would increase the chance of dependency cycles, causing less-than-ideal
+      // order. If the user has opted-in to --graph-type=all (or "graphType":
+      // "all" in lerna.json), devDependencies _will_ be included in the graph
+      // construction.
       graphType: this.options.graphType === "all" ? "allDependencies" : "dependencies",
     });
   }
@@ -669,7 +677,8 @@ class PublishCommand extends Command {
 
     chain = chain.then(() => removeTempLicenses(this.packagesToBeLicensed));
 
-    // remove temporary license files if _any_ error occurs _anywhere_ in the promise chain
+    // remove temporary license files if _any_ error occurs _anywhere_ in the
+    // promise chain
     chain = chain.catch(error => this.removeTempLicensesOnError(error));
 
     if (!this.hasRootedLeaf) {
