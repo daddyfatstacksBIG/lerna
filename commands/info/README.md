@@ -2,11 +2,13 @@
 
 > Print local environment information
 
-Install [lerna](https://www.npmjs.com/package/lerna) for access to the `lerna` CLI.
+Install [lerna](https://www.npmjs.com/package/lerna) for access to the `lerna`
+CLI.
 
 ## Usage
 
-The `info` prints local environment information that proves to be useful especially while submitting bug reports.
+The `info` prints local environment information that proves to be useful
+especially while submitting bug reports.
 
 `lerna info`
 
