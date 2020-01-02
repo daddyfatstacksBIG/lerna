@@ -6,7 +6,9 @@ const envinfo = require("envinfo");
 
 module.exports = factory;
 
-function factory(argv) { return new InfoCommand(argv); }
+function factory(argv) {
+  return new InfoCommand(argv);
+}
 
 class InfoCommand extends Command {
   // eslint-disable-next-line
@@ -15,13 +17,13 @@ class InfoCommand extends Command {
   execute() {
     output("\n Environment info:");
     envinfo
-        .run({
-          System : [ "OS", "CPU" ],
-          Binaries : [ "Node", "Yarn", "npm" ],
-          Utilities : [ "Git" ],
-          npmPackages : [ "lerna" ],
-        })
-        .then(output);
+      .run({
+        System: ["OS", "CPU"],
+        Binaries: ["Node", "Yarn", "npm"],
+        Utilities: ["Git"],
+        npmPackages: ["lerna"],
+      })
+      .then(output);
   }
 }
 

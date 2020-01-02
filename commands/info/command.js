@@ -8,4 +8,6 @@ exports.command = "info";
 
 exports.describe = "Prints debugging information about the local environment";
 
-exports.handler = function handler(argv) { return require(".")(argv); };
+exports.handler = function handler(argv) {
+  return require(".")(argv);
+};

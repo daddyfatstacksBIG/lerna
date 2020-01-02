@@ -34,8 +34,7 @@ const initFixture = require("@lerna-test/init-fixture")(__dirname);
 const path = require("path");
 
 // file under test
-const lernaPublish =
-    require("@lerna-test/command-runner")(require("../command"));
+const lernaPublish = require("@lerna-test/command-runner")(require("../command"));
 
 gitCheckout.mockImplementation(() => Promise.resolve());
 
@@ -45,7 +44,9 @@ describe("PublishCommand", () => {
   describe("cli validation", () => {
     let cwd;
 
-    beforeAll(async () => { cwd = await initFixture("normal"); });
+    beforeAll(async () => {
+      cwd = await initFixture("normal");
+    });
 
     it("exits early when no changes found", async () => {
       collectUpdates.setUpdated(cwd);
@@ -60,31 +61,35 @@ describe("PublishCommand", () => {
     it("exits non-zero with --scope", async () => {
       const command = lernaPublish(cwd)("--scope", "package-1");
 
-      await expect(command).rejects.toThrow(expect.objectContaining({
-        exitCode : 1,
-        message : "Unknown argument: scope",
-      }));
+      await expect(command).rejects.toThrow(
+        expect.objectContaining({
+          exitCode: 1,
+          message: "Unknown argument: scope",
+        })
+      );
     });
 
     it("exits non-zero with --since", async () => {
       const command = lernaPublish(cwd)("--since", "master");
 
-      await expect(command).rejects.toThrow(expect.objectContaining({
-        exitCode : 1,
-        message : "Unknown argument: since",
-      }));
+      await expect(command).rejects.toThrow(
+        expect.objectContaining({
+          exitCode: 1,
+          message: "Unknown argument: since",
+        })
+      );
     });
 
-    it("errors when --git-head is passed without from-package positional",
-       async () => {
-         const command = lernaPublish(cwd)("--git-head", "deadbeef");
+    it("errors when --git-head is passed without from-package positional", async () => {
+      const command = lernaPublish(cwd)("--git-head", "deadbeef");
 
-         await expect(command).rejects.toThrow(expect.objectContaining({
-           name : "ValidationError",
-           message :
-               "--git-head is only allowed with 'from-package' positional",
-         }));
-       });
+      await expect(command).rejects.toThrow(
+        expect.objectContaining({
+          name: "ValidationError",
+          message: "--git-head is only allowed with 'from-package' positional",
+        })
+      );
+    });
   });
 
   describe("with implied versioning", () => {
@@ -93,9 +98,9 @@ describe("PublishCommand", () => {
 
       await lernaPublish(testDir)();
 
-      expect(PromptUtilities.confirm)
-          .toHaveBeenLastCalledWith(
-              "Are you sure you want to publish these packages?");
+      expect(PromptUtilities.confirm).toHaveBeenLastCalledWith(
+        "Are you sure you want to publish these packages?"
+      );
       expect(packDirectory.registry).toMatchInlineSnapshot(`
 Set {
   "package-1",
@@ -113,29 +118,35 @@ Map {
 }
 `);
       expect(npmPublish.order()).toEqual([
-        "package-1", "package-3", "package-4", "package-2",
+        "package-1",
+        "package-3",
+        "package-4",
+        "package-2",
         // package-5 is private
       ]);
       expect(npmDistTag.remove).not.toHaveBeenCalled();
       expect(npmDistTag.add).not.toHaveBeenCalled();
 
       expect(getNpmUsername).toHaveBeenCalled();
-      expect(getNpmUsername).toHaveBeenLastCalledWith(expect.figgyPudding({
-        registry : "https://registry.npmjs.org/"
-      }));
+      expect(getNpmUsername).toHaveBeenLastCalledWith(
+        expect.figgyPudding({
+          registry: "https://registry.npmjs.org/",
+        })
+      );
 
       expect(verifyNpmPackageAccess).toHaveBeenCalled();
-      expect(verifyNpmPackageAccess)
-          .toHaveBeenLastCalledWith(
-              expect.any(Array), "lerna-test",
-              expect.figgyPudding({registry : "https://registry.npmjs.org/"}));
+      expect(verifyNpmPackageAccess).toHaveBeenLastCalledWith(
+        expect.any(Array),
+        "lerna-test",
+        expect.figgyPudding({ registry: "https://registry.npmjs.org/" })
+      );
 
       expect(getTwoFactorAuthRequired).toHaveBeenCalled();
-      expect(getTwoFactorAuthRequired)
-          .toHaveBeenLastCalledWith(
-              // extra insurance that @lerna/npm-conf is defaulting things
-              // correctly
-              expect.figgyPudding({otp : undefined}));
+      expect(getTwoFactorAuthRequired).toHaveBeenLastCalledWith(
+        // extra insurance that @lerna/npm-conf is defaulting things
+        // correctly
+        expect.figgyPudding({ otp: undefined })
+      );
     });
 
     it("publishes changed independent packages", async () => {
@@ -144,60 +155,59 @@ Map {
       await lernaPublish(testDir)();
 
       expect(npmPublish.order()).toEqual([
-        "package-1", "package-3", "package-4", "package-2",
+        "package-1",
+        "package-3",
+        "package-4",
+        "package-2",
         // package-5 is private
       ]);
     });
 
-    it("--skip-npm yields immediately to VersionCommand with warning",
-       async () => {
-         const cwd = await initFixture("normal");
+    it("--skip-npm yields immediately to VersionCommand with warning", async () => {
+      const cwd = await initFixture("normal");
 
-         await lernaPublish(cwd)("--skip-npm");
+      await lernaPublish(cwd)("--skip-npm");
 
-         expect(npmPublish.order()).toHaveLength(0);
+      expect(npmPublish.order()).toHaveLength(0);
 
-         const logMessages = loggingOutput("warn");
-         expect(logMessages)
-             .toContain("Instead of --skip-npm, call `lerna version` directly");
-       });
+      const logMessages = loggingOutput("warn");
+      expect(logMessages).toContain("Instead of --skip-npm, call `lerna version` directly");
+    });
 
-    it("throws an error in fixed mode when --independent is passed",
-       async () => {
-         const testDir = await initFixture("normal");
-         const command = lernaPublish(testDir)("--independent");
+    it("throws an error in fixed mode when --independent is passed", async () => {
+      const testDir = await initFixture("normal");
+      const command = lernaPublish(testDir)("--independent");
 
-         await expect(command).rejects.toThrow("independent");
-       });
+      await expect(command).rejects.toThrow("independent");
+    });
   });
 
   describe("--graph-type", () => {
-    it("produces a topological ordering that _includes_ devDependencies when value is 'all'",
-       async () => {
-         const cwd = await initFixture("normal");
+    it("produces a topological ordering that _includes_ devDependencies when value is 'all'", async () => {
+      const cwd = await initFixture("normal");
 
-         await lernaPublish(cwd)("--graph-type", "all");
+      await lernaPublish(cwd)("--graph-type", "all");
 
-         expect(npmPublish.order()).toEqual([
-           "package-1", "package-4", "package-2",
-           // package-3 has a peer/devDependency on package-2
-           "package-3",
-           // package-5 is private
-         ]);
-       });
+      expect(npmPublish.order()).toEqual([
+        "package-1",
+        "package-4",
+        "package-2",
+        // package-3 has a peer/devDependency on package-2
+        "package-3",
+        // package-5 is private
+      ]);
+    });
 
-    it("throws an error when value is _not_ 'all' or 'dependencies'",
-       async () => {
-         const testDir = await initFixture("normal");
-         const command = lernaPublish(testDir)("--graph-type", "poopy-pants");
+    it("throws an error when value is _not_ 'all' or 'dependencies'", async () => {
+      const testDir = await initFixture("normal");
+      const command = lernaPublish(testDir)("--graph-type", "poopy-pants");
 
-         await expect(command).rejects.toThrow("poopy-pants");
-       });
+      await expect(command).rejects.toThrow("poopy-pants");
+    });
   });
 
   describe("--otp", () => {
-    otplease.getOneTimePassword.mockImplementation(
-        () => Promise.resolve("654321"));
+    otplease.getOneTimePassword.mockImplementation(() => Promise.resolve("654321"));
 
     it("passes one-time password to npm commands", async () => {
       const testDir = await initFixture("normal");
@@ -208,31 +218,30 @@ Map {
 
       await lernaPublish(testDir)("--otp", otp);
 
-      expect(npmPublish)
-          .toHaveBeenCalledWith(expect.objectContaining({name : "package-1"}),
-                                "/TEMP_DIR/package-1-MOCKED.tgz",
-                                expect.objectContaining({otp}),
-                                expect.objectContaining({otp}));
+      expect(npmPublish).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "package-1" }),
+        "/TEMP_DIR/package-1-MOCKED.tgz",
+        expect.objectContaining({ otp }),
+        expect.objectContaining({ otp })
+      );
       expect(otplease.getOneTimePassword).not.toHaveBeenCalled();
     });
 
-    it("prompts for OTP when option missing and account-level 2FA enabled",
-       async () => {
-         const testDir = await initFixture("normal");
+    it("prompts for OTP when option missing and account-level 2FA enabled", async () => {
+      const testDir = await initFixture("normal");
 
-         getTwoFactorAuthRequired.mockResolvedValueOnce(true);
+      getTwoFactorAuthRequired.mockResolvedValueOnce(true);
 
-         await lernaPublish(testDir)();
+      await lernaPublish(testDir)();
 
-         expect(npmPublish)
-             .toHaveBeenCalledWith(
-                 expect.objectContaining({name : "package-1"}),
-                 "/TEMP_DIR/package-1-MOCKED.tgz",
-                 expect.objectContaining({otp : undefined}),
-                 expect.objectContaining({otp : "654321"}));
-         expect(otplease.getOneTimePassword)
-             .toHaveBeenLastCalledWith("Enter OTP:");
-       });
+      expect(npmPublish).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "package-1" }),
+        "/TEMP_DIR/package-1-MOCKED.tgz",
+        expect.objectContaining({ otp: undefined }),
+        expect.objectContaining({ otp: "654321" })
+      );
+      expect(otplease.getOneTimePassword).toHaveBeenLastCalledWith("Enter OTP:");
+    });
   });
 
   describe("--legacy-auth", () => {
@@ -243,12 +252,12 @@ Map {
 
       await lernaPublish(testDir)("--legacy-auth", auth);
 
-      expect(npmPublish)
-          .toHaveBeenCalledWith(
-              expect.objectContaining({name : "package-1"}),
-              "/TEMP_DIR/package-1-MOCKED.tgz",
-              expect.objectContaining({"auth-type" : "legacy", _auth : auth}),
-              expect.objectContaining({otp : undefined}));
+      expect(npmPublish).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "package-1" }),
+        "/TEMP_DIR/package-1-MOCKED.tgz",
+        expect.objectContaining({ "auth-type": "legacy", _auth: auth }),
+        expect.objectContaining({ otp: undefined })
+      );
     });
   });
 
@@ -259,11 +268,12 @@ Map {
 
       await lernaPublish(testDir)("--registry", registry);
 
-      expect(npmPublish)
-          .toHaveBeenCalledWith(expect.objectContaining({name : "package-1"}),
-                                "/TEMP_DIR/package-1-MOCKED.tgz",
-                                expect.objectContaining({registry}),
-                                expect.objectContaining({otp : undefined}));
+      expect(npmPublish).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "package-1" }),
+        "/TEMP_DIR/package-1-MOCKED.tgz",
+        expect.objectContaining({ registry }),
+        expect.objectContaining({ otp: undefined })
+      );
     });
 
     it("overwrites yarn registry proxy with https://registry.npmjs.org/", async () => {
@@ -272,20 +282,16 @@ Map {
 
       await lernaPublish(testDir)("--registry", registry);
 
-      expect(npmPublish)
-          .toHaveBeenCalledWith(expect.objectContaining({name : "package-1"}),
-                                "/TEMP_DIR/package-1-MOCKED.tgz",
-                                expect.objectContaining(
-                                    {registry : "https://registry.npmjs.org/"}),
-                                expect.objectContaining({otp : undefined}));
+      expect(npmPublish).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "package-1" }),
+        "/TEMP_DIR/package-1-MOCKED.tgz",
+        expect.objectContaining({ registry: "https://registry.npmjs.org/" }),
+        expect.objectContaining({ otp: undefined })
+      );
 
       const logMessages = loggingOutput("warn");
-      expect(logMessages)
-          .toContain(
-              "Yarn's registry proxy is broken, replacing with public npm registry");
-      expect(logMessages)
-          .toContain(
-              "If you don't have an npm token, you should exit and run `npm login`");
+      expect(logMessages).toContain("Yarn's registry proxy is broken, replacing with public npm registry");
+      expect(logMessages).toContain("If you don't have an npm token, you should exit and run `npm login`");
     });
 
     it("skips validation on any other third-party registry", async () => {
@@ -295,9 +301,7 @@ Map {
       await lernaPublish(testDir)("--registry", registry);
 
       const logMessages = loggingOutput("notice");
-      expect(logMessages)
-          .toContain(
-              "Skipping all user and access validation due to third-party registry");
+      expect(logMessages).toContain("Skipping all user and access validation due to third-party registry");
     });
   });
 
@@ -337,8 +341,7 @@ Map {
 
       await lernaPublish(cwd)("--contents", "dist");
 
-      const [[ pkgOne, dirOne, opts ], [ pkgTwo, dirTwo ]] =
-          packDirectory.mock.calls;
+      const [[pkgOne, dirOne, opts], [pkgTwo, dirTwo]] = packDirectory.mock.calls;
 
       // second argument to packDirectory() is the location, _not_ the contents
       expect(dirOne).toBe(pkgOne.location);
@@ -358,27 +361,29 @@ Map {
       const cwd = await initFixture("lifecycle");
 
       await commitChangeToPackage(cwd, "package-1", "chore: setup", {
-        publishConfig : {
-          directory : "dist",
+        publishConfig: {
+          directory: "dist",
         },
       });
 
       await lernaPublish(cwd)();
 
-      expect(packDirectory)
-          .toHaveBeenCalledWith(expect.objectContaining({
-            name : "package-1",
-            contents : path.join(cwd, "packages/package-1/dist"),
-          }),
-                                path.join(cwd, "packages/package-1"),
-                                expect.any(Object));
-      expect(packDirectory)
-          .toHaveBeenCalledWith(expect.objectContaining({
-            name : "package-2",
-            contents : path.join(cwd, "packages/package-2"),
-          }),
-                                path.join(cwd, "packages/package-2"),
-                                expect.any(Object));
+      expect(packDirectory).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "package-1",
+          contents: path.join(cwd, "packages/package-1/dist"),
+        }),
+        path.join(cwd, "packages/package-1"),
+        expect.any(Object)
+      );
+      expect(packDirectory).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "package-2",
+          contents: path.join(cwd, "packages/package-2"),
+        }),
+        path.join(cwd, "packages/package-2"),
+        expect.any(Object)
+      );
     });
   });
 
@@ -387,8 +392,7 @@ Map {
       const testDir = await initFixture("toposort");
       const command = lernaPublish(testDir)("--reject-cycles");
 
-      await expect(command).rejects.toThrow(
-          "Dependency cycles detected, you should fix these!");
+      await expect(command).rejects.toThrow("Dependency cycles detected, you should fix these!");
     });
   });
 });

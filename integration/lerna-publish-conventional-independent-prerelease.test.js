@@ -9,52 +9,51 @@ const cliRunner = require("@lerna-test/cli-runner");
 const commitChangeToPackage = require("@lerna-test/commit-change-to-package");
 const gitTag = require("@lerna-test/git-tag");
 const cloneFixture = require("@lerna-test/clone-fixture")(
-    path.resolve(__dirname, "../commands/publish/__tests__"));
+  path.resolve(__dirname, "../commands/publish/__tests__")
+);
 
 // stabilize changelog commit SHA and datestamp
 expect.addSnapshotSerializer(require("@lerna-test/serialize-changelog"));
 
 const env = {
   // never actually upload when calling `npm publish`
-  npm_config_dry_run : true,
+  npm_config_dry_run: true,
   // skip npm package validation, none of the stubs are real
-  LERNA_INTEGRATION : "SKIP",
+  LERNA_INTEGRATION: "SKIP",
 };
 
-describe(
-    `lerna publish --conventional-prerelease/graduate independent w/ changelog`,
-    () => {
-      let cwd;
+describe(`lerna publish --conventional-prerelease/graduate independent w/ changelog`, () => {
+  let cwd;
 
-      beforeAll(async () => {
-        ({cwd} = await cloneFixture("independent", "chore: init repo"));
-        await Promise.all([
-          gitTag(cwd, "package-1@1.0.0"),
-          gitTag(cwd, "package-2@2.0.0"),
-          gitTag(cwd, "package-3@3.0.0"),
-          gitTag(cwd, "package-4@4.0.0"),
-          gitTag(cwd, "package-5@5.0.0"),
-        ]);
-      });
+  beforeAll(async () => {
+    ({ cwd } = await cloneFixture("independent", "chore: init repo"));
+    await Promise.all([
+      gitTag(cwd, "package-1@1.0.0"),
+      gitTag(cwd, "package-2@2.0.0"),
+      gitTag(cwd, "package-3@3.0.0"),
+      gitTag(cwd, "package-4@4.0.0"),
+      gitTag(cwd, "package-5@5.0.0"),
+    ]);
+  });
 
-      test(`release specified stable packages as prerelease`, async () => {
-        const args = [
-          "publish",
-          "--conventional-commits",
-          "--conventional-prerelease=package-2,package-3",
-          "--yes",
-        ];
-        await commitChangeToPackage(cwd, "package-1",
-                                    "feat(package-1): Add foo", {foo : true});
-        await commitChangeToPackage(cwd, "package-2", "fix(package-2): Fix bar",
-                                    {bar : true});
-        await commitChangeToPackage(cwd, "package-3",
-                                    `feat(package-3): Add baz feature${os.EOL}${
-                                        os.EOL}BREAKING CHANGE: yup`,
-                                    {baz : true});
+  test(`release specified stable packages as prerelease`, async () => {
+    const args = [
+      "publish",
+      "--conventional-commits",
+      "--conventional-prerelease=package-2,package-3",
+      "--yes",
+    ];
+    await commitChangeToPackage(cwd, "package-1", "feat(package-1): Add foo", { foo: true });
+    await commitChangeToPackage(cwd, "package-2", "fix(package-2): Fix bar", { bar: true });
+    await commitChangeToPackage(
+      cwd,
+      "package-3",
+      `feat(package-3): Add baz feature${os.EOL}${os.EOL}BREAKING CHANGE: yup`,
+      { baz: true }
+    );
 
-        const {stdout} = await cliRunner(cwd, env)(...args);
-        expect(stdout).toMatchInlineSnapshot(`
+    const { stdout } = await cliRunner(cwd, env)(...args);
+    expect(stdout).toMatchInlineSnapshot(`
 
 Changes:
  - package-1: 1.0.0 => 1.1.0
@@ -67,17 +66,15 @@ Successfully published:
  - package-2@2.0.1-alpha.0
  - package-3@4.0.0-alpha.0
 `);
-      });
+  });
 
-      test(`bump while maintaining current prerelease status`, async () => {
-        const args = [ "publish", "--conventional-commits", "--yes" ];
-        await commitChangeToPackage(cwd, "package-1", "fix(package-1): Fix foo",
-                                    {foo : false});
-        await commitChangeToPackage(cwd, "package-2",
-                                    "feat(package-2): Add baz", {baz : true});
+  test(`bump while maintaining current prerelease status`, async () => {
+    const args = ["publish", "--conventional-commits", "--yes"];
+    await commitChangeToPackage(cwd, "package-1", "fix(package-1): Fix foo", { foo: false });
+    await commitChangeToPackage(cwd, "package-2", "feat(package-2): Add baz", { baz: true });
 
-        const {stdout} = await cliRunner(cwd, env)(...args);
-        expect(stdout).toMatchInlineSnapshot(`
+    const { stdout } = await cliRunner(cwd, env)(...args);
+    expect(stdout).toMatchInlineSnapshot(`
 
 Changes:
  - package-1: 1.1.0 => 1.1.1
@@ -90,18 +87,14 @@ Successfully published:
  - package-2@2.1.0-alpha.0
  - package-3@4.0.0-alpha.1
 `);
-      });
+  });
 
-      test(`release all changes as prerelease`, async () => {
-        const args = [
-          "publish", "--conventional-commits", "--conventional-prerelease",
-          "--yes"
-        ];
-        await commitChangeToPackage(cwd, "package-1",
-                                    "fix(package-1): Unfix foo", {foo : true});
+  test(`release all changes as prerelease`, async () => {
+    const args = ["publish", "--conventional-commits", "--conventional-prerelease", "--yes"];
+    await commitChangeToPackage(cwd, "package-1", "fix(package-1): Unfix foo", { foo: true });
 
-        const {stdout} = await cliRunner(cwd, env)(...args);
-        expect(stdout).toMatchInlineSnapshot(`
+    const { stdout } = await cliRunner(cwd, env)(...args);
+    expect(stdout).toMatchInlineSnapshot(`
 
 Changes:
  - package-1: 1.1.1 => 1.1.2-alpha.0
@@ -114,20 +107,19 @@ Successfully published:
  - package-2@2.1.0-alpha.1
  - package-3@4.0.0-alpha.2
 `);
-      });
+  });
 
-      test(`graduate specific prerelease packages`, async () => {
-        const args = [
-          "publish",
-          "--conventional-commits",
-          "--conventional-graduate=package-2,package-4",
-          "--yes",
-        ];
-        await commitChangeToPackage(cwd, "package-1",
-                                    "feat(package-1): Add baz", {baz : true});
+  test(`graduate specific prerelease packages`, async () => {
+    const args = [
+      "publish",
+      "--conventional-commits",
+      "--conventional-graduate=package-2,package-4",
+      "--yes",
+    ];
+    await commitChangeToPackage(cwd, "package-1", "feat(package-1): Add baz", { baz: true });
 
-        const {stdout} = await cliRunner(cwd, env)(...args);
-        expect(stdout).toMatchInlineSnapshot(`
+    const { stdout } = await cliRunner(cwd, env)(...args);
+    expect(stdout).toMatchInlineSnapshot(`
 
 Changes:
  - package-1: 1.1.2-alpha.0 => 1.2.0-alpha.0
@@ -140,15 +132,12 @@ Successfully published:
  - package-2@2.1.0
  - package-3@4.0.0-alpha.3
 `);
-      });
+  });
 
-      test(`graduate all prerelease packages with released HEAD`, async () => {
-        const args = [
-          "publish", "--conventional-commits", "--conventional-graduate",
-          "--yes"
-        ];
-        const {stdout} = await cliRunner(cwd, env)(...args);
-        expect(stdout).toMatchInlineSnapshot(`
+  test(`graduate all prerelease packages with released HEAD`, async () => {
+    const args = ["publish", "--conventional-commits", "--conventional-graduate", "--yes"];
+    const { stdout } = await cliRunner(cwd, env)(...args);
+    expect(stdout).toMatchInlineSnapshot(`
 
 Changes:
  - package-1: 1.2.0-alpha.0 => 1.2.0
@@ -161,28 +150,26 @@ Successfully published:
  - package-2@2.1.1
  - package-3@4.0.0
 `);
-      });
+  });
 
-      test(`generate accurate changelog`, async () => {
-        const changelogFilePaths = await globby([ "**/CHANGELOG.md" ], {
-          cwd,
-          absolute : true,
-          followSymlinkedDirectories : false,
-        });
-        const [
-            // no root changelog
-            pkg1Changelog,
-            pkg2Changelog,
-            pkg3Changelog,
-            pkg5Changelog,
-        ] =
-            await Promise.all(
-                changelogFilePaths.sort().map(fp => fs.readFile(fp, "utf8")));
+  test(`generate accurate changelog`, async () => {
+    const changelogFilePaths = await globby(["**/CHANGELOG.md"], {
+      cwd,
+      absolute: true,
+      followSymlinkedDirectories: false,
+    });
+    const [
+      // no root changelog
+      pkg1Changelog,
+      pkg2Changelog,
+      pkg3Changelog,
+      pkg5Changelog,
+    ] = await Promise.all(changelogFilePaths.sort().map(fp => fs.readFile(fp, "utf8")));
 
-        /**
-         * ./packages/package-1/CHANGELOG.md
-         */
-        expect(pkg1Changelog).toMatchInlineSnapshot(`
+    /**
+     * ./packages/package-1/CHANGELOG.md
+     */
+    expect(pkg1Changelog).toMatchInlineSnapshot(`
 # Change Log
 
 All notable changes to this project will be documented in this file.
@@ -238,10 +225,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 `);
 
-        /**
-         * ./packages/package-2/CHANGELOG.md
-         */
-        expect(pkg2Changelog).toMatchInlineSnapshot(`
+    /**
+     * ./packages/package-2/CHANGELOG.md
+     */
+    expect(pkg2Changelog).toMatchInlineSnapshot(`
 # Change Log
 
 All notable changes to this project will be documented in this file.
@@ -291,10 +278,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 `);
 
-        /**
-         * ./packages/package-3/CHANGELOG.md
-         */
-        expect(pkg3Changelog).toMatchInlineSnapshot(`
+    /**
+     * ./packages/package-3/CHANGELOG.md
+     */
+    expect(pkg3Changelog).toMatchInlineSnapshot(`
 # Change Log
 
 All notable changes to this project will be documented in this file.
@@ -346,10 +333,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 `);
 
-        /**
-         * ./packages/package-5/CHANGELOG.md
-         */
-        expect(pkg5Changelog).toMatchInlineSnapshot(`
+    /**
+     * ./packages/package-5/CHANGELOG.md
+     */
+    expect(pkg5Changelog).toMatchInlineSnapshot(`
 # Change Log
 
 All notable changes to this project will be documented in this file.
@@ -392,5 +379,5 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 **Note:** Version bump only for package package-5
 
 `);
-      });
-    });
+  });
+});

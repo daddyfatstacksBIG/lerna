@@ -12,7 +12,7 @@ function collectDependents(nodes) {
     }
 
     // breadth-first search
-    const queue = [ currentNode ];
+    const queue = [currentNode];
     const seen = new Set();
 
     const visit = (dependentNode, dependentName, siblingDependents) => {
@@ -22,8 +22,7 @@ function collectDependents(nodes) {
 
       seen.add(dependentNode);
 
-      if (dependentNode === currentNode ||
-          siblingDependents.has(currentNode.name)) {
+      if (dependentNode === currentNode || siblingDependents.has(currentNode.name)) {
         // a direct or transitive cycle, skip it
         return;
       }

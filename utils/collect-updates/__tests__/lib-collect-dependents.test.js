@@ -15,9 +15,9 @@ test("source node (dag)", () => {
   const result = collectDependents(candidates);
 
   expect(Array.from(result)).toEqual([
-    expect.objectContaining({name : "package-dag-2a"}),
-    expect.objectContaining({name : "package-dag-2b"}),
-    expect.objectContaining({name : "package-dag-3"}),
+    expect.objectContaining({ name: "package-dag-2a" }),
+    expect.objectContaining({ name: "package-dag-2b" }),
+    expect.objectContaining({ name: "package-dag-3" }),
   ]);
 });
 
@@ -29,8 +29,7 @@ test("internal node (dag)", () => {
 
   const result = collectDependents(candidates);
 
-  expect(Array.from(result)).toEqual([ expect.objectContaining(
-      {name : "package-dag-3"}) ]);
+  expect(Array.from(result)).toEqual([expect.objectContaining({ name: "package-dag-3" })]);
 });
 
 test("pendant node (dag)", () => {
@@ -53,9 +52,9 @@ test("source node (cycle)", () => {
   const result = collectDependents(candidates);
 
   expect(Array.from(result)).toEqual([
-    expect.objectContaining({name : "package-cycle-2"}),
-    expect.objectContaining({name : "package-cycle-extraneous-1"}),
-    expect.objectContaining({name : "package-cycle-extraneous-2"}),
+    expect.objectContaining({ name: "package-cycle-2" }),
+    expect.objectContaining({ name: "package-cycle-extraneous-1" }),
+    expect.objectContaining({ name: "package-cycle-extraneous-2" }),
   ]);
 });
 
@@ -68,8 +67,8 @@ test("internal node (cycle)", () => {
   const result = collectDependents(candidates);
 
   expect(Array.from(result)).toEqual([
-    expect.objectContaining({name : "package-cycle-1"}),
-    expect.objectContaining({name : "package-cycle-extraneous-2"}),
+    expect.objectContaining({ name: "package-cycle-1" }),
+    expect.objectContaining({ name: "package-cycle-extraneous-2" }),
     // package-cycle-extraneous-1 was ignored
   ]);
 });

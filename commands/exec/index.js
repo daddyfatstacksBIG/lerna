@@ -7,14 +7,18 @@ const Command = require("@lerna/command");
 const Profiler = require("@lerna/profiler");
 const runTopologically = require("@lerna/run-topologically");
 const ValidationError = require("@lerna/validation-error");
-const {getFilteredPackages} = require("@lerna/filter-options");
+const { getFilteredPackages } = require("@lerna/filter-options");
 
 module.exports = factory;
 
-function factory(argv) { return new ExecCommand(argv); }
+function factory(argv) {
+  return new ExecCommand(argv);
+}
 
 class ExecCommand extends Command {
-  get requiresGit() { return false; }
+  get requiresGit() {
+    return false;
+  }
 
   initialize() {
     const dashedArgs = this.options["--"] || [];
@@ -23,8 +27,7 @@ class ExecCommand extends Command {
     this.args = (this.options.args || []).concat(dashedArgs);
 
     if (!this.command) {
-      throw new ValidationError("ENOCOMMAND",
-                                "A command to execute is required");
+      throw new ValidationError("ENOCOMMAND", "A command to execute is required");
     }
 
     // inverted boolean options
@@ -37,21 +40,26 @@ class ExecCommand extends Command {
 
     let chain = Promise.resolve();
 
-    chain = chain.then(() => getFilteredPackages(this.packageGraph,
-                                                 this.execOpts, this.options));
-    chain = chain.then(
-        filteredPackages => { this.filteredPackages = filteredPackages; });
+    chain = chain.then(() => getFilteredPackages(this.packageGraph, this.execOpts, this.options));
+    chain = chain.then(filteredPackages => {
+      this.filteredPackages = filteredPackages;
+    });
 
     return chain.then(() => {
       this.count = this.filteredPackages.length;
       this.packagePlural = this.count === 1 ? "package" : "packages";
-      this.joinedCommand = [ this.command ].concat(this.args).join(" ");
+      this.joinedCommand = [this.command].concat(this.args).join(" ");
     });
   }
 
   execute() {
-    this.logger.info("", "Executing command in %d %s: %j", this.count,
-                     this.packagePlural, this.joinedCommand);
+    this.logger.info(
+      "",
+      "Executing command in %d %s: %j",
+      this.count,
+      this.packagePlural,
+      this.joinedCommand
+    );
 
     let chain = Promise.resolve();
 
@@ -77,41 +85,45 @@ class ExecCommand extends Command {
         /* istanbul ignore else */
         if (results.some(result => result.failed)) {
           // propagate "highest" error code, it's probably the most useful
-          const codes = results.filter(result => result.failed)
-                            .map(result => result.code);
+          const codes = results.filter(result => result.failed).map(result => result.code);
           const exitCode = Math.max(...codes, 1);
 
-          this.logger.error(
-              "", "Received non-zero exit code %d during execution", exitCode);
+          this.logger.error("", "Received non-zero exit code %d during execution", exitCode);
           process.exitCode = exitCode;
         }
       });
     }
 
     return chain.then(() => {
-      this.logger.success("exec", "Executed command in %d %s: %j", this.count,
-                          this.packagePlural, this.joinedCommand);
+      this.logger.success(
+        "exec",
+        "Executed command in %d %s: %j",
+        this.count,
+        this.packagePlural,
+        this.joinedCommand
+      );
     });
   }
 
   getOpts(pkg) {
     // these options are passed _directly_ to execa
     return {
-      cwd : pkg.location,
-      shell : true,
-      extendEnv : false,
-      env : Object.assign({}, this.env, {
-        LERNA_PACKAGE_NAME : pkg.name,
-        LERNA_ROOT_PATH : this.project.rootPath,
+      cwd: pkg.location,
+      shell: true,
+      extendEnv: false,
+      env: Object.assign({}, this.env, {
+        LERNA_PACKAGE_NAME: pkg.name,
+        LERNA_ROOT_PATH: this.project.rootPath,
       }),
-      reject : this.bail,
+      reject: this.bail,
       pkg,
     };
   }
 
   getRunner() {
-    return this.options.stream ? pkg => this.runCommandInPackageStreaming(pkg)
-                               : pkg => this.runCommandInPackageCapturing(pkg);
+    return this.options.stream
+      ? pkg => this.runCommandInPackageStreaming(pkg)
+      : pkg => this.runCommandInPackageCapturing(pkg);
   }
 
   runCommandInPackagesTopological() {
@@ -120,9 +132,9 @@ class ExecCommand extends Command {
 
     if (this.options.profile) {
       profiler = new Profiler({
-        concurrency : this.concurrency,
-        log : this.logger,
-        outputDirectory : this.options.profileLocation || this.project.rootPath,
+        concurrency: this.concurrency,
+        log: this.logger,
+        outputDirectory: this.options.profileLocation || this.project.rootPath,
       });
 
       const callback = this.getRunner();
@@ -132,8 +144,8 @@ class ExecCommand extends Command {
     }
 
     let chain = runTopologically(this.filteredPackages, runner, {
-      concurrency : this.concurrency,
-      rejectCycles : this.options.rejectCycles,
+      concurrency: this.concurrency,
+      rejectCycles: this.options.rejectCycles,
     });
 
     if (profiler) {
@@ -144,23 +156,24 @@ class ExecCommand extends Command {
   }
 
   runCommandInPackagesParallel() {
-    return pMap(this.filteredPackages,
-                pkg => this.runCommandInPackageStreaming(pkg));
+    return pMap(this.filteredPackages, pkg => this.runCommandInPackageStreaming(pkg));
   }
 
   runCommandInPackagesLexical() {
-    return pMap(this.filteredPackages, this.getRunner(),
-                {concurrency : this.concurrency});
+    return pMap(this.filteredPackages, this.getRunner(), { concurrency: this.concurrency });
   }
 
   runCommandInPackageStreaming(pkg) {
     return ChildProcessUtilities.spawnStreaming(
-        this.command, this.args, this.getOpts(pkg), this.prefix && pkg.name);
+      this.command,
+      this.args,
+      this.getOpts(pkg),
+      this.prefix && pkg.name
+    );
   }
 
   runCommandInPackageCapturing(pkg) {
-    return ChildProcessUtilities.spawn(this.command, this.args,
-                                       this.getOpts(pkg));
+    return ChildProcessUtilities.spawn(this.command, this.args, this.getOpts(pkg));
   }
 }
 

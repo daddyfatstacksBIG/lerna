@@ -4,22 +4,23 @@ const path = require("path");
 
 const cliRunner = require("@lerna-test/cli-runner");
 const cloneFixture = require("@lerna-test/clone-fixture")(
-    path.resolve(__dirname, "../commands/publish/__tests__"));
+  path.resolve(__dirname, "../commands/publish/__tests__")
+);
 
 const env = {
   // never actually upload when calling `npm publish`
-  npm_config_dry_run : true,
+  npm_config_dry_run: true,
   // skip npm package validation, none of the stubs are real
-  LERNA_INTEGRATION : "SKIP",
+  LERNA_INTEGRATION: "SKIP",
 };
 
 test("lerna publish --legacy-auth", async () => {
-  const {cwd} = await cloneFixture("normal");
+  const { cwd } = await cloneFixture("normal");
   const data = "hi:mom";
   const auth = Buffer.from(data).toString("base64");
-  const args = [ "publish", "patch", "--yes", "--legacy-auth", auth ];
+  const args = ["publish", "patch", "--yes", "--legacy-auth", auth];
 
-  const {stdout} = await cliRunner(cwd, env)(...args);
+  const { stdout } = await cliRunner(cwd, env)(...args);
   expect(stdout).toMatchInlineSnapshot(`
 
     Changes:

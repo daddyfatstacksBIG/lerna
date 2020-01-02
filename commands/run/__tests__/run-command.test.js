@@ -18,35 +18,34 @@ const normalizeRelativeDir = require("@lerna-test/normalize-relative-dir");
 const lernaRun = require("@lerna-test/command-runner")(require("../command"));
 
 // assertion helpers
-const ranInPackagesStreaming = testDir => npmRunScript.stream.mock.calls.reduce(
-    (arr, [ script, {args, npmClient, pkg, prefix} ]) => {
-      const dir = normalizeRelativeDir(testDir, pkg.location);
-      const record =
-          [ dir, npmClient, "run", script, `(prefixed: ${prefix})` ].concat(
-              args);
-      arr.push(record.join(" "));
-      return arr;
-    },
-    []);
+const ranInPackagesStreaming = testDir =>
+  npmRunScript.stream.mock.calls.reduce((arr, [script, { args, npmClient, pkg, prefix }]) => {
+    const dir = normalizeRelativeDir(testDir, pkg.location);
+    const record = [dir, npmClient, "run", script, `(prefixed: ${prefix})`].concat(args);
+    arr.push(record.join(" "));
+    return arr;
+  }, []);
 
 describe("RunCommand", () => {
-  npmRunScript.mockImplementation(
-      (script, {pkg}) => Promise.resolve({code : 0, stdout : pkg.name}));
-  npmRunScript.stream.mockImplementation(() => Promise.resolve({code : 0}));
+  npmRunScript.mockImplementation((script, { pkg }) => Promise.resolve({ code: 0, stdout: pkg.name }));
+  npmRunScript.stream.mockImplementation(() => Promise.resolve({ code: 0 }));
 
-  afterEach(() => { process.exitCode = undefined; });
+  afterEach(() => {
+    process.exitCode = undefined;
+  });
 
   describe("in a basic repo", () => {
     // working dir is never mutated
     let testDir;
 
-    beforeAll(async () => { testDir = await initFixture("basic"); });
+    beforeAll(async () => {
+      testDir = await initFixture("basic");
+    });
 
     it("should complain if invoked with an empty script", async () => {
       const command = lernaRun(testDir)("");
 
-      await expect(command).rejects.toThrow(
-          "You must specify a lifecycle script to run");
+      await expect(command).rejects.toThrow("You must specify a lifecycle script to run");
     });
 
     it("runs a script in packages", async () => {
@@ -72,9 +71,7 @@ describe("RunCommand", () => {
     it("always runs env script", async () => {
       await lernaRun(testDir)("env");
 
-      expect(output.logged().split("\n")).toEqual([
-        "package-1", "package-4", "package-2", "package-3"
-      ]);
+      expect(output.logged().split("\n")).toEqual(["package-1", "package-4", "package-2", "package-3"]);
     });
 
     it("runs a script only in scoped packages", async () => {
@@ -92,9 +89,9 @@ describe("RunCommand", () => {
     it("does not error when no packages match", async () => {
       await lernaRun(testDir)("missing-script");
 
-      expect(loggingOutput("success"))
-          .toContain(
-              "No packages found with the lifecycle script 'missing-script'");
+      expect(loggingOutput("success")).toContain(
+        "No packages found with the lifecycle script 'missing-script'"
+      );
     });
 
     it("runs a script in all packages with --parallel", async () => {
@@ -112,13 +109,11 @@ describe("RunCommand", () => {
     it("supports alternate npmClient configuration", async () => {
       await lernaRun(testDir)("env", "--npm-client", "yarn");
 
-      expect(output.logged().split("\n")).toEqual([
-        "package-1", "package-4", "package-2", "package-3"
-      ]);
+      expect(output.logged().split("\n")).toEqual(["package-1", "package-4", "package-2", "package-3"]);
     });
 
     it("reports script errors with early exit", async () => {
-      npmRunScript.mockImplementationOnce((script, {pkg}) => {
+      npmRunScript.mockImplementationOnce((script, { pkg }) => {
         const err = new Error(pkg.name);
 
         err.failed = true;
@@ -134,7 +129,7 @@ describe("RunCommand", () => {
     });
 
     it("propagates non-zero exit codes with --no-bail", async () => {
-      npmRunScript.mockImplementationOnce((script, {pkg}) => {
+      npmRunScript.mockImplementationOnce((script, { pkg }) => {
         const err = new Error(pkg.name);
 
         err.failed = true;
@@ -147,16 +142,21 @@ describe("RunCommand", () => {
       await lernaRun(testDir)("my-script", "--no-bail");
 
       expect(process.exitCode).toBe(456);
-      expect(output.logged().split("\n")).toEqual([ "package-1", "package-3" ]);
+      expect(output.logged().split("\n")).toEqual(["package-1", "package-3"]);
     });
   });
 
   describe("with --include-filtered-dependencies", () => {
     it("runs scoped command including filtered deps", async () => {
       const testDir = await initFixture("include-filtered-dependencies");
-      await lernaRun(testDir)("my-script", "--scope", "@test/package-2",
-                              "--include-filtered-dependencies", "--",
-                              "--silent");
+      await lernaRun(testDir)(
+        "my-script",
+        "--scope",
+        "@test/package-2",
+        "--include-filtered-dependencies",
+        "--",
+        "--silent"
+      );
 
       const logLines = output.logged().split("\n");
       expect(logLines).toContain("@test/package-1");
@@ -170,21 +170,20 @@ describe("RunCommand", () => {
 
       await lernaRun(cwd)("--profile", "my-script");
 
-      const [profileLocation] =
-          await globby("Lerna-Profile-*.json", {cwd, absolute : true});
+      const [profileLocation] = await globby("Lerna-Profile-*.json", { cwd, absolute: true });
       const json = await fs.readJson(profileLocation);
 
       expect(json).toMatchObject([
         {
-          name : "package-1",
-          ph : "X",
-          ts : expect.any(Number),
-          pid : 1,
-          tid : expect.any(Number),
-          dur : expect.any(Number),
+          name: "package-1",
+          ph: "X",
+          ts: expect.any(Number),
+          pid: 1,
+          tid: expect.any(Number),
+          dur: expect.any(Number),
         },
         {
-          name : "package-3",
+          name: "package-3",
         },
       ]);
     });
@@ -192,11 +191,9 @@ describe("RunCommand", () => {
     it("accepts --profile-location", async () => {
       const cwd = await initFixture("basic");
 
-      await lernaRun(cwd)("--profile", "--profile-location", "foo/bar",
-                          "my-script");
+      await lernaRun(cwd)("--profile", "--profile-location", "foo/bar", "my-script");
 
-      const [profileLocation] =
-          await globby("foo/bar/Lerna-Profile-*.json", {cwd, absolute : true});
+      const [profileLocation] = await globby("foo/bar/Lerna-Profile-*.json", { cwd, absolute: true });
       const exists = await fs.exists(profileLocation);
 
       expect(exists).toBe(true);
@@ -225,8 +222,7 @@ describe("RunCommand", () => {
     it("optionally streams output", async () => {
       const testDir = await initFixture("toposort");
 
-      await lernaRun(testDir)("env", "--concurrency", "1", "--no-sort",
-                              "--stream");
+      await lernaRun(testDir)("env", "--concurrency", "1", "--no-sort", "--stream");
 
       expect(ranInPackagesStreaming(testDir)).toMatchInlineSnapshot(`
         Array [
@@ -251,10 +247,8 @@ describe("RunCommand", () => {
       await lernaRun(testDir)("env", "--concurrency", "1");
 
       const [logMessage] = loggingOutput("warn");
-      expect(logMessage)
-          .toMatch("Dependency cycles detected, you should fix these!");
-      expect(logMessage)
-          .toMatch("package-cycle-1 -> package-cycle-2 -> package-cycle-1");
+      expect(logMessage).toMatch("Dependency cycles detected, you should fix these!");
+      expect(logMessage).toMatch("package-cycle-1 -> package-cycle-2 -> package-cycle-1");
 
       expect(output.logged().split("\n")).toEqual([
         "package-dag-1",
@@ -275,15 +269,11 @@ describe("RunCommand", () => {
       await lernaRun(testDir)("env", "--concurrency", "1");
 
       const [logMessage] = loggingOutput("warn");
-      expect(logMessage)
-          .toMatch("Dependency cycles detected, you should fix these!");
+      expect(logMessage).toMatch("Dependency cycles detected, you should fix these!");
       expect(logMessage).toMatch("b -> c -> d -> e -> b");
-      expect(logMessage)
-          .toMatch("f -> g -> (nested cycle: b -> c -> d -> e -> b) -> f");
+      expect(logMessage).toMatch("f -> g -> (nested cycle: b -> c -> d -> e -> b) -> f");
 
-      expect(output.logged().split("\n")).toEqual([
-        "f", "b", "e", "d", "c", "g", "a"
-      ]);
+      expect(output.logged().split("\n")).toEqual(["f", "b", "e", "d", "c", "g", "a"]);
     });
 
     it("works with separate cycles", async () => {
@@ -292,22 +282,18 @@ describe("RunCommand", () => {
       await lernaRun(testDir)("env", "--concurrency", "1");
 
       const [logMessage] = loggingOutput("warn");
-      expect(logMessage)
-          .toMatch("Dependency cycles detected, you should fix these!");
+      expect(logMessage).toMatch("Dependency cycles detected, you should fix these!");
       expect(logMessage).toMatch("b -> c -> d -> b");
       expect(logMessage).toMatch("e -> f -> g -> e");
 
-      expect(output.logged().split("\n")).toEqual([
-        "e", "g", "f", "h", "b", "d", "c", "a"
-      ]);
+      expect(output.logged().split("\n")).toEqual(["e", "g", "f", "h", "b", "d", "c", "a"]);
     });
 
     it("should throw an error with --reject-cycles", async () => {
       const testDir = await initFixture("toposort");
       const command = lernaRun(testDir)("env", "--reject-cycles");
 
-      await expect(command).rejects.toThrow(
-          "Dependency cycles detected, you should fix these!");
+      await expect(command).rejects.toThrow("Dependency cycles detected, you should fix these!");
     });
   });
 });

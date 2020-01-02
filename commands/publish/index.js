@@ -20,7 +20,7 @@ const npmDistTag = require("@lerna/npm-dist-tag");
 const npmPublish = require("@lerna/npm-publish");
 const packDirectory = require("@lerna/pack-directory");
 const logPacked = require("@lerna/log-packed");
-const {createRunner} = require("@lerna/run-lifecycle");
+const { createRunner } = require("@lerna/run-lifecycle");
 const runTopologically = require("@lerna/run-topologically");
 const pulseTillDone = require("@lerna/pulse-till-done");
 const versionCommand = require("@lerna/version");
@@ -41,12 +41,14 @@ const getTwoFactorAuthRequired = require("./lib/get-two-factor-auth-required");
 
 module.exports = factory;
 
-function factory(argv) { return new PublishCommand(argv); }
+function factory(argv) {
+  return new PublishCommand(argv);
+}
 
 class PublishCommand extends Command {
   get otherCommandConfigs() {
     // back-compat
-    return [ "version" ];
+    return ["version"];
   }
 
   get requiresGit() {
@@ -69,9 +71,7 @@ class PublishCommand extends Command {
     } = this.options;
 
     if (this.requiresGit && gitHead) {
-      throw new ValidationError(
-          "EGITHEAD",
-          "--git-head is only allowed with 'from-package' positional");
+      throw new ValidationError("EGITHEAD", "--git-head is only allowed with 'from-package' positional");
     }
 
     // https://docs.npmjs.com/misc/config#save-prefix
@@ -92,15 +92,13 @@ class PublishCommand extends Command {
 
   get userAgent() {
     // consumed by npm-registry-fetch (via libnpmpublish)
-    return `lerna/${this.options.lernaVersion}/node@${process.version}+${
-        process.arch} (${process.platform})`;
+    return `lerna/${this.options.lernaVersion}/node@${process.version}+${process.arch} (${process.platform})`;
   }
 
   initialize() {
     if (this.options.skipNpm) {
       // TODO: remove in next major release
-      this.logger.warn("deprecated",
-                       "Instead of --skip-npm, call `lerna version` directly");
+      this.logger.warn("deprecated", "Instead of --skip-npm, call `lerna version` directly");
 
       return versionCommand(this.argv).then(() => false);
     }
@@ -119,28 +117,24 @@ class PublishCommand extends Command {
     this.logger.verbose("user-agent", this.userAgent);
 
     this.conf = npmConf({
-      lernaCommand : "publish",
-      _auth : this.options.legacyAuth,
-      npmSession : this.npmSession,
-      npmVersion : this.userAgent,
-      otp : this.options.otp,
-      registry : this.options.registry,
-      "ignore-prepublish" : this.options.ignorePrepublish,
-      "ignore-scripts" : this.options.ignoreScripts,
+      lernaCommand: "publish",
+      _auth: this.options.legacyAuth,
+      npmSession: this.npmSession,
+      npmVersion: this.userAgent,
+      otp: this.options.otp,
+      registry: this.options.registry,
+      "ignore-prepublish": this.options.ignorePrepublish,
+      "ignore-scripts": this.options.ignoreScripts,
     });
 
     // cache to hold a one-time-password across publishes
-    this.otpCache = {otp : this.conf.get("otp")};
+    this.otpCache = { otp: this.conf.get("otp") };
 
     this.conf.set("user-agent", this.userAgent, "cli");
 
     if (this.conf.get("registry") === "https://registry.yarnpkg.com") {
-      this.logger.warn(
-          "",
-          "Yarn's registry proxy is broken, replacing with public npm registry");
-      this.logger.warn(
-          "",
-          "If you don't have an npm token, you should exit and run `npm login`");
+      this.logger.warn("", "Yarn's registry proxy is broken, replacing with public npm registry");
+      this.logger.warn("", "If you don't have an npm token, you should exit and run `npm login`");
 
       this.conf.set("registry", "https://registry.npmjs.org/", "cli");
     }
@@ -157,20 +151,17 @@ class PublishCommand extends Command {
     this.hasRootedLeaf = this.packageGraph.has(this.project.manifest.name);
 
     if (this.hasRootedLeaf) {
-      this.logger.info(
-          "publish",
-          "rooted leaf detected, skipping synthetic root lifecycles");
+      this.logger.info("publish", "rooted leaf detected, skipping synthetic root lifecycles");
     }
 
     this.runPackageLifecycle = createRunner(this.options);
 
     // don't execute recursively if run from a poorly-named script
-    this.runRootLifecycle =
-        /^(pre|post)?publish$/.test(process.env.npm_lifecycle_event) ? stage => {
-          this.logger.warn(
-              "lifecycle",
-              "Skipping root %j because it has already been called", stage);
-        } : stage => this.runPackageLifecycle(this.project.manifest, stage);
+    this.runRootLifecycle = /^(pre|post)?publish$/.test(process.env.npm_lifecycle_event)
+      ? stage => {
+          this.logger.warn("lifecycle", "Skipping root %j because it has already been called", stage);
+        }
+      : stage => this.runPackageLifecycle(this.project.manifest, stage);
 
     let chain = Promise.resolve();
 
@@ -200,8 +191,7 @@ class PublishCommand extends Command {
       this.updates = result.updates;
       this.updatesVersions = new Map(result.updatesVersions);
 
-      this.packagesToPublish =
-          this.updates.map(({pkg}) => pkg).filter(pkg => !pkg.private);
+      this.packagesToPublish = this.updates.map(({ pkg }) => pkg).filter(pkg => !pkg.private);
 
       if (this.options.contents) {
         // globally override directory to publish
@@ -250,14 +240,12 @@ class PublishCommand extends Command {
 
     return chain.then(() => {
       const count = this.packagesToPublish.length;
-      const message =
-          this.packagesToPublish.map(pkg => ` - ${pkg.name}@${pkg.version}`);
+      const message = this.packagesToPublish.map(pkg => ` - ${pkg.name}@${pkg.version}`);
 
       output("Successfully published:");
       output(message.join(os.EOL));
 
-      this.logger.success("published", "%d %s", count,
-                          count === 1 ? "package" : "packages");
+      this.logger.success("published", "%d %s", count, count === 1 ? "package" : "packages");
     });
   }
 
@@ -266,8 +254,7 @@ class PublishCommand extends Command {
   }
 
   detectFromGit() {
-    const matchingPattern =
-        this.project.isIndependent() ? "*@*" : `${this.tagPrefix}*.*.*`;
+    const matchingPattern = this.project.isIndependent() ? "*@*" : `${this.tagPrefix}*.*.*`;
 
     let chain = Promise.resolve();
 
@@ -286,17 +273,16 @@ class PublishCommand extends Command {
         return taggedPackageNames.map(name => this.packageGraph.get(name));
       }
 
-      return getTaggedPackages(this.packageGraph, this.project.rootPath,
-                               this.execOpts);
+      return getTaggedPackages(this.packageGraph, this.project.rootPath, this.execOpts);
     });
 
     return chain.then(updates => {
-      const updatesVersions = updates.map(({pkg}) => [pkg.name, pkg.version]);
+      const updatesVersions = updates.map(({ pkg }) => [pkg.name, pkg.version]);
 
       return {
         updates,
         updatesVersions,
-        needsConfirmation : true,
+        needsConfirmation: true,
       };
     });
   }
@@ -305,22 +291,22 @@ class PublishCommand extends Command {
     let chain = Promise.resolve();
 
     // attempting to publish a release with local changes is not allowed
-    chain = chain.then(() => this.verifyWorkingTreeClean()).catch(err => {
-      // an execa error is thrown when git suffers a fatal error (such as no git
-      // repository present)
-      if (err.failed && /git describe/.test(err.cmd)) {
-        // (we tried)
-        this.logger.silly("EWORKINGTREE", err.message);
-        this.logger.notice(
-            "FYI", "Unable to verify working tree, proceed at your own risk");
-      } else {
-        // validation errors should be preserved
-        throw err;
-      }
-    });
+    chain = chain
+      .then(() => this.verifyWorkingTreeClean())
+      .catch(err => {
+        // an execa error is thrown when git suffers a fatal error (such as no git
+        // repository present)
+        if (err.failed && /git describe/.test(err.cmd)) {
+          // (we tried)
+          this.logger.silly("EWORKINGTREE", err.message);
+          this.logger.notice("FYI", "Unable to verify working tree, proceed at your own risk");
+        } else {
+          // validation errors should be preserved
+          throw err;
+        }
+      });
 
-    chain = chain.then(
-        () => getUnpublishedPackages(this.packageGraph, this.conf.snapshot));
+    chain = chain.then(() => getUnpublishedPackages(this.packageGraph, this.conf.snapshot));
     chain = chain.then(unpublished => {
       if (!unpublished.length) {
         this.logger.notice("from-package", "No unpublished release found");
@@ -330,18 +316,18 @@ class PublishCommand extends Command {
     });
 
     return chain.then(updates => {
-      const updatesVersions = updates.map(({pkg}) => [pkg.name, pkg.version]);
+      const updatesVersions = updates.map(({ pkg }) => [pkg.name, pkg.version]);
 
       return {
         updates,
         updatesVersions,
-        needsConfirmation : true,
+        needsConfirmation: true,
       };
     });
   }
 
   detectCanaryVersions() {
-    const {cwd} = this.execOpts;
+    const { cwd } = this.execOpts;
     const {
       bump = "prepatch",
       preid = "alpha",
@@ -350,8 +336,7 @@ class PublishCommand extends Command {
       includeMergedTags,
     } = this.options;
     // "prerelease" and "prepatch" are identical, for our purposes
-    const release = bump.startsWith("pre") ? bump.replace("release", "patch")
-                                           : `pre${bump}`;
+    const release = bump.startsWith("pre") ? bump.replace("release", "patch") : `pre${bump}`;
 
     let chain = Promise.resolve();
 
@@ -359,16 +344,17 @@ class PublishCommand extends Command {
     chain = chain.then(() => this.verifyWorkingTreeClean());
 
     // find changed packages since last release, if any
-    chain = chain.then(() => collectUpdates(this.packageGraph.rawPackageList,
-                                            this.packageGraph, this.execOpts, {
-                                              bump : "prerelease",
-                                              canary : true,
-                                              ignoreChanges,
-                                              forcePublish,
-                                              includeMergedTags,
-                                            }));
+    chain = chain.then(() =>
+      collectUpdates(this.packageGraph.rawPackageList, this.packageGraph, this.execOpts, {
+        bump: "prerelease",
+        canary: true,
+        ignoreChanges,
+        forcePublish,
+        includeMergedTags,
+      })
+    );
 
-    const makeVersion = ({lastVersion, refCount, sha}) => {
+    const makeVersion = ({ lastVersion, refCount, sha }) => {
       // the next version is bumped without concern for preid or current index
       const nextVersion = semver.inc(lastVersion, release.replace("pre", ""));
 
@@ -379,56 +365,60 @@ class PublishCommand extends Command {
 
     if (this.project.isIndependent()) {
       // each package is described against its tags only
-      chain = chain.then(
-          updates =>
-              pMap(updates,
-                   ({pkg}) =>
-                       describeRef({
-                         match : `${pkg.name}@*`,
-                         cwd,
-                       },
-                                   includeMergedTags)
-                           .then(({lastVersion = pkg.version, refCount, sha}) =>
-                                     // an unpublished package will have no
-                                     // reachable git tag
-                                 makeVersion({lastVersion, refCount, sha}))
-                           .then(version => [pkg.name, version]))
-                  .then(updatesVersions => ({
-                          updates,
-                          updatesVersions,
-                        })));
+      chain = chain.then(updates =>
+        pMap(updates, ({ pkg }) =>
+          describeRef(
+            {
+              match: `${pkg.name}@*`,
+              cwd,
+            },
+            includeMergedTags
+          )
+            .then(({ lastVersion = pkg.version, refCount, sha }) =>
+              // an unpublished package will have no
+              // reachable git tag
+              makeVersion({ lastVersion, refCount, sha })
+            )
+            .then(version => [pkg.name, version])
+        ).then(updatesVersions => ({
+          updates,
+          updatesVersions,
+        }))
+      );
     } else {
       // all packages are described against the last tag
-      chain = chain.then(
-          updates =>
-              describeRef({
-                match : `${this.tagPrefix}*.*.*`,
-                cwd,
-              },
-                          includeMergedTags)
-                  .then(makeVersion)
-                  .then(version => updates.map(({pkg}) => [pkg.name, version]))
-                  .then(updatesVersions => ({
-                          updates,
-                          updatesVersions,
-                        })));
+      chain = chain.then(updates =>
+        describeRef(
+          {
+            match: `${this.tagPrefix}*.*.*`,
+            cwd,
+          },
+          includeMergedTags
+        )
+          .then(makeVersion)
+          .then(version => updates.map(({ pkg }) => [pkg.name, version]))
+          .then(updatesVersions => ({
+            updates,
+            updatesVersions,
+          }))
+      );
     }
 
-    return chain.then(({updates, updatesVersions}) => ({
-                        updates,
-                        updatesVersions,
-                        needsConfirmation : true,
-                      }));
+    return chain.then(({ updates, updatesVersions }) => ({
+      updates,
+      updatesVersions,
+      needsConfirmation: true,
+    }));
   }
 
   confirmPublish() {
     const count = this.packagesToPublish.length;
     const message = this.packagesToPublish.map(
-        pkg => ` - ${pkg.name} => ${this.updatesVersions.get(pkg.name)}`);
+      pkg => ` - ${pkg.name} => ${this.updatesVersions.get(pkg.name)}`
+    );
 
     output("");
-    output(
-        `Found ${count} ${count === 1 ? "package" : "packages"} to publish:`);
+    output(`Found ${count} ${count === 1 ? "package" : "packages"} to publish:`);
     output(message.join(os.EOL));
     output("");
 
@@ -437,50 +427,47 @@ class PublishCommand extends Command {
       return true;
     }
 
-    return PromptUtilities.confirm(
-        "Are you sure you want to publish these packages?");
+    return PromptUtilities.confirm("Are you sure you want to publish these packages?");
   }
 
   prepareLicenseActions() {
     return Promise.resolve()
-        .then(() => getPackagesWithoutLicense(this.project,
-                                              this.packagesToPublish))
-        .then(packagesWithoutLicense => {
-          if (packagesWithoutLicense.length && !this.project.licensePath) {
-            this.packagesToBeLicensed = [];
+      .then(() => getPackagesWithoutLicense(this.project, this.packagesToPublish))
+      .then(packagesWithoutLicense => {
+        if (packagesWithoutLicense.length && !this.project.licensePath) {
+          this.packagesToBeLicensed = [];
 
-            const names = packagesWithoutLicense.map(pkg => pkg.name);
-            const noun = names.length > 1 ? "Packages" : "Package";
-            const verb = names.length > 1 ? "are" : "is";
-            const list =
-                names.length > 1
-                    ? `${names.slice(0, -1).join(", ")}${
-                          names.length > 2 ? "," : ""} and ${
-                          names[names.length -
-                                1] /* oxford commas _are_ that important */
-                      }`
-                    : names[0];
+          const names = packagesWithoutLicense.map(pkg => pkg.name);
+          const noun = names.length > 1 ? "Packages" : "Package";
+          const verb = names.length > 1 ? "are" : "is";
+          const list =
+            names.length > 1
+              ? `${names.slice(0, -1).join(", ")}${names.length > 2 ? "," : ""} and ${
+                  names[names.length - 1] /* oxford commas _are_ that important */
+                }`
+              : names[0];
 
-            this.logger.warn(
-                "ENOLICENSE", "%s %s %s missing a license.\n%s\n%s", noun, list,
-                verb,
-                "One way to fix this is to add a LICENSE.md file to the root of this repository.",
-                "See https://choosealicense.com for additional guidance.");
-          } else {
-            this.packagesToBeLicensed = packagesWithoutLicense;
-          }
-        });
+          this.logger.warn(
+            "ENOLICENSE",
+            "%s %s %s missing a license.\n%s\n%s",
+            noun,
+            list,
+            verb,
+            "One way to fix this is to add a LICENSE.md file to the root of this repository.",
+            "See https://choosealicense.com for additional guidance."
+          );
+        } else {
+          this.packagesToBeLicensed = packagesWithoutLicense;
+        }
+      });
   }
 
   prepareRegistryActions() {
     let chain = Promise.resolve();
 
     if (this.conf.get("registry") !== "https://registry.npmjs.org/") {
-      this.logger.notice(
-          "",
-          "Skipping all user and access validation due to third-party registry");
-      this.logger.notice("",
-                         "Make sure you're authenticated properly ¯\\_(ツ)_/¯");
+      this.logger.notice("", "Skipping all user and access validation due to third-party registry");
+      this.logger.notice("", "Make sure you're authenticated properly ¯\\_(ツ)_/¯");
 
       return chain;
     }
@@ -497,8 +484,7 @@ class PublishCommand extends Command {
       chain = chain.then(username => {
         // if no username was retrieved, don't bother validating
         if (username) {
-          return verifyNpmPackageAccess(this.packagesToPublish, username,
-                                        this.conf.snapshot);
+          return verifyNpmPackageAccess(this.packagesToPublish, username, this.conf.snapshot);
         }
       });
 
@@ -516,13 +502,12 @@ class PublishCommand extends Command {
   updateCanaryVersions() {
     const publishableUpdates = this.updates.filter(node => !node.pkg.private);
 
-    return pMap(publishableUpdates, ({pkg, localDependencies}) => {
+    return pMap(publishableUpdates, ({ pkg, localDependencies }) => {
       pkg.version = this.updatesVersions.get(pkg.name);
 
       for (const [depName, resolved] of localDependencies) {
         // other canary versions need to be updated, non-canary is a no-op
-        const depVersion = this.updatesVersions.get(depName) ||
-                           this.packageGraph.get(depName).pkg.version;
+        const depVersion = this.updatesVersions.get(depName) || this.packageGraph.get(depName).pkg.version;
 
         // it no longer matters if we mutate the shared Package instance
         pkg.updateLocalDependency(resolved, depVersion, this.savePrefix);
@@ -534,18 +519,18 @@ class PublishCommand extends Command {
 
   resolveLocalDependencyLinks() {
     // resolve relative file: links to their actual version range
-    const updatesWithLocalLinks =
-        this.updates.filter(({pkg, localDependencies}) =>
-                                !pkg.private && localDependencies.size &&
-                                Array.from(localDependencies.values())
-                                    .some(({type}) => type === "directory"));
+    const updatesWithLocalLinks = this.updates.filter(
+      ({ pkg, localDependencies }) =>
+        !pkg.private &&
+        localDependencies.size &&
+        Array.from(localDependencies.values()).some(({ type }) => type === "directory")
+    );
 
-    return pMap(updatesWithLocalLinks, ({pkg, localDependencies}) => {
+    return pMap(updatesWithLocalLinks, ({ pkg, localDependencies }) => {
       for (const [depName, resolved] of localDependencies) {
         // regardless of where the version comes from, we can't publish
         // "file:../sibling-pkg" specs
-        const depVersion = this.updatesVersions.get(depName) ||
-                           this.packageGraph.get(depName).pkg.version;
+        const depVersion = this.updatesVersions.get(depName) || this.packageGraph.get(depName).pkg.version;
 
         // it no longer matters if we mutate the shared Package instance
         pkg.updateLocalDependency(resolved, depVersion, this.savePrefix);
@@ -567,8 +552,9 @@ class PublishCommand extends Command {
       // from-package should be _able_ to run without git, but at least we tried
       this.logger.silly("EGITHEAD", err.message);
       this.logger.notice(
-          "FYI",
-          "Unable to set temporary gitHead property, it will be missing from registry metadata");
+        "FYI",
+        "Unable to set temporary gitHead property, it will be missing from registry metadata"
+      );
     }
 
     // writing changes to disk handled in serializeChanges()
@@ -581,17 +567,14 @@ class PublishCommand extends Command {
   resetChanges() {
     // the package.json files are changed (by gitHead if not --canary)
     // and we should always __attempt_ to leave the working tree clean
-    const {cwd} = this.execOpts;
-    const dirtyManifests =
-        [ this.project.manifest ]
-            .concat(this.packagesToPublish)
-            .map(pkg => path.relative(cwd, pkg.manifestLocation));
+    const { cwd } = this.execOpts;
+    const dirtyManifests = [this.project.manifest]
+      .concat(this.packagesToPublish)
+      .map(pkg => path.relative(cwd, pkg.manifestLocation));
 
     return gitCheckout(dirtyManifests, this.execOpts).catch(err => {
       this.logger.silly("EGITCHECKOUT", err.message);
-      this.logger.notice(
-          "FYI",
-          "Unable to reset working tree changes, this probably isn't a git repo.");
+      this.logger.notice("FYI", "Unable to reset working tree changes, this probably isn't a git repo.");
     });
   }
 
@@ -602,8 +585,7 @@ class PublishCommand extends Command {
       // eslint-disable-next-line import/no-dynamic-require, global-require
       require(scriptLocation);
     } catch (ex) {
-      this.logger.silly("execScript",
-                        `No ${script} script found at ${scriptLocation}`);
+      this.logger.silly("execScript", `No ${script} script found at ${scriptLocation}`);
     }
 
     return pkg;
@@ -611,17 +593,19 @@ class PublishCommand extends Command {
 
   removeTempLicensesOnError(error) {
     return Promise.resolve()
-        .then(() => removeTempLicenses(this.packagesToBeLicensed)
-                        .catch(removeError => {
-                          this.logger.error(
-                              "licenses",
-                              "error removing temporary license files",
-                              removeError.stack || removeError);
-                        }))
-        .then(() => {
-          // restore original error into promise chain
-          throw error;
-        });
+      .then(() =>
+        removeTempLicenses(this.packagesToBeLicensed).catch(removeError => {
+          this.logger.error(
+            "licenses",
+            "error removing temporary license files",
+            removeError.stack || removeError
+          );
+        })
+      )
+      .then(() => {
+        // restore original error into promise chain
+        throw error;
+      });
   }
 
   requestOneTimePassword() {
@@ -631,22 +615,23 @@ class PublishCommand extends Command {
     }
 
     return Promise.resolve()
-        .then(() => otplease.getOneTimePassword("Enter OTP:"))
-        .then(otp => { this.otpCache.otp = otp; });
+      .then(() => otplease.getOneTimePassword("Enter OTP:"))
+      .then(otp => {
+        this.otpCache.otp = otp;
+      });
   }
 
   topoMapPackages(mapper) {
     // we don't respect --no-sort here, sorry
     return runTopologically(this.packagesToPublish, mapper, {
-      concurrency : this.concurrency,
-      rejectCycles : this.options.rejectCycles,
+      concurrency: this.concurrency,
+      rejectCycles: this.options.rejectCycles,
       // By default, do not include devDependencies in the graph because it
       // would increase the chance of dependency cycles, causing less-than-ideal
       // order. If the user has opted-in to --graph-type=all (or "graphType":
       // "all" in lerna.json), devDependencies _will_ be included in the graph
       // construction.
-      graphType : this.options.graphType === "all" ? "allDependencies"
-                                                   : "dependencies",
+      graphType: this.options.graphType === "all" ? "allDependencies" : "dependencies",
     });
   }
 
@@ -657,31 +642,26 @@ class PublishCommand extends Command {
 
     let chain = Promise.resolve();
 
-    chain = chain.then(() => createTempLicenses(this.project.licensePath,
-                                                this.packagesToBeLicensed));
+    chain = chain.then(() => createTempLicenses(this.project.licensePath, this.packagesToBeLicensed));
 
     if (!this.hasRootedLeaf) {
       // despite being deprecated for years...
       chain = chain.then(() => this.runRootLifecycle("prepublish"));
 
       // these lifecycles _should_ never be employed to run `lerna publish`...
-      chain = chain.then(
-          () => this.runPackageLifecycle(this.project.manifest, "prepare"));
-      chain = chain.then(() => this.runPackageLifecycle(this.project.manifest,
-                                                        "prepublishOnly"));
-      chain = chain.then(
-          () => this.runPackageLifecycle(this.project.manifest, "prepack"));
+      chain = chain.then(() => this.runPackageLifecycle(this.project.manifest, "prepare"));
+      chain = chain.then(() => this.runPackageLifecycle(this.project.manifest, "prepublishOnly"));
+      chain = chain.then(() => this.runPackageLifecycle(this.project.manifest, "prepack"));
     }
 
     const opts = this.conf.snapshot;
-    const mapper = pPipe([
-      this.options.requireScripts &&
-          (pkg => this.execScript(pkg, "prepublish")),
+    const mapper = pPipe(
+      [
+        this.options.requireScripts && (pkg => this.execScript(pkg, "prepublish")),
 
-      pkg =>
+        pkg =>
           pulseTillDone(packDirectory(pkg, pkg.location, opts)).then(packed => {
-            tracker.verbose("packed",
-                            path.relative(this.project.rootPath, pkg.contents));
+            tracker.verbose("packed", path.relative(this.project.rootPath, pkg.contents));
             tracker.completeWork(1);
 
             // store metadata for use in this.publishPacked()
@@ -690,7 +670,8 @@ class PublishCommand extends Command {
             // manifest may be mutated by any previous lifecycle
             return pkg.refresh();
           }),
-    ].filter(Boolean));
+      ].filter(Boolean)
+    );
 
     chain = chain.then(() => this.topoMapPackages(mapper));
 
@@ -701,8 +682,7 @@ class PublishCommand extends Command {
     chain = chain.catch(error => this.removeTempLicensesOnError(error));
 
     if (!this.hasRootedLeaf) {
-      chain = chain.then(
-          () => this.runPackageLifecycle(this.project.manifest, "postpack"));
+      chain = chain.then(() => this.runPackageLifecycle(this.project.manifest, "postpack"));
     }
 
     return pFinally(chain, () => tracker.finish());
@@ -723,30 +703,29 @@ class PublishCommand extends Command {
     const opts = Object.assign(this.conf.snapshot, {
       // distTag defaults to "latest" OR whatever is in pkg.publishConfig.tag
       // if we skip temp tags we should tag with the proper value immediately
-      tag : this.options.tempTag ? "lerna-temp" : this.conf.get("tag"),
+      tag: this.options.tempTag ? "lerna-temp" : this.conf.get("tag"),
     });
 
-    const mapper = pPipe([
-      pkg => {
-        const preDistTag = this.getPreDistTag(pkg);
-        const tag = !this.options.tempTag && preDistTag ? preDistTag : opts.tag;
-        const pkgOpts = Object.assign({}, opts, {tag});
+    const mapper = pPipe(
+      [
+        pkg => {
+          const preDistTag = this.getPreDistTag(pkg);
+          const tag = !this.options.tempTag && preDistTag ? preDistTag : opts.tag;
+          const pkgOpts = Object.assign({}, opts, { tag });
 
-        return pulseTillDone(npmPublish(pkg, pkg.packed.tarFilePath, pkgOpts,
-                                        this.otpCache))
-            .then(() => {
-              tracker.success("published", pkg.name, pkg.version);
-              tracker.completeWork(1);
+          return pulseTillDone(npmPublish(pkg, pkg.packed.tarFilePath, pkgOpts, this.otpCache)).then(() => {
+            tracker.success("published", pkg.name, pkg.version);
+            tracker.completeWork(1);
 
-              logPacked(pkg.packed);
+            logPacked(pkg.packed);
 
-              return pkg;
-            });
-      },
+            return pkg;
+          });
+        },
 
-      this.options.requireScripts &&
-          (pkg => this.execScript(pkg, "postpublish")),
-    ].filter(Boolean));
+        this.options.requireScripts && (pkg => this.execScript(pkg, "postpublish")),
+      ].filter(Boolean)
+    );
 
     chain = chain.then(() => this.topoMapPackages(mapper));
 
@@ -781,17 +760,14 @@ class PublishCommand extends Command {
       const distTag = preDistTag || getDistTag(pkg.get("publishConfig"));
 
       return Promise.resolve()
-          .then(() => pulseTillDone(
-                    npmDistTag.remove(spec, "lerna-temp", opts, this.otpCache)))
-          .then(() => pulseTillDone(
-                    npmDistTag.add(spec, distTag, opts, this.otpCache)))
-          .then(() => {
-            tracker.success("dist-tag", "%s@%s => %j", pkg.name, pkg.version,
-                            distTag);
-            tracker.completeWork(1);
+        .then(() => pulseTillDone(npmDistTag.remove(spec, "lerna-temp", opts, this.otpCache)))
+        .then(() => pulseTillDone(npmDistTag.add(spec, distTag, opts, this.otpCache)))
+        .then(() => {
+          tracker.success("dist-tag", "%s@%s => %j", pkg.name, pkg.version, distTag);
+          tracker.completeWork(1);
 
-            return pkg;
-          });
+          return pkg;
+        });
     };
 
     chain = chain.then(() => this.topoMapPackages(mapper));
